@@ -108,7 +108,7 @@ object CatsEffectMBeans {
     Sync[F]
       .blocking(
         for {
-          (col0, pe0, e0) <- computePool
+          computePoolRes <- computePool
             .fold[Either[Throwable, (MetricCollection, Int, Int)]](
               Right((MetricCollection.empty, 0, 0))
             )(
@@ -121,9 +121,9 @@ object CatsEffectMBeans {
                 Map.empty
               )
             )
-          (col, parseErrors, errors) <- queues
+          queuesRes <- queues
             .foldLeft[Either[Throwable, (MetricCollection, Int, Int)]](
-              Right((col0, pe0, e0))
+              Right(computePoolRes)
             ) {
               case (Right((col, parseErrors, errors)), mbean) =>
                 readAttributes(
@@ -143,18 +143,18 @@ object CatsEffectMBeans {
                 }
               case (acc, _) => acc
             }
-        } yield col
+        } yield queuesRes._1
           .appendLongGauge(
             parseErrorsName,
             parseErrorsHelp,
             Map.empty[Label.Name, String],
-            parseErrors.toLong
+            queuesRes._2.toLong
           )
           .appendLongGauge(
             errorsName,
             errorsHelp,
             Map.empty[Label.Name, String],
-            errors.toLong
+            queuesRes._3.toLong
           )
       )
       .flatMap(_.liftTo[F])
