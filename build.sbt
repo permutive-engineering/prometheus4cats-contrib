@@ -20,7 +20,25 @@ val Scala213 = "2.13.10"
 ThisBuild / crossScalaVersions := Seq("2.12.15", Scala213, "3.2.0")
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
-lazy val root = tlCrossRootProject.aggregate(trace4Cats)
+lazy val root = tlCrossRootProject.aggregate(catsEffect, trace4Cats)
+
+lazy val catsEffect = project
+  .in(file("cats-effect"))
+  .settings(
+    name := "prometheus4cats-contrib-cats-effect",
+    libraryDependencies ++= Seq(
+      "com.permutive" %% "prometheus4cats" % "1.0.0-RC3",
+      "org.typelevel" %% "cats-effect" % "3.3.14",
+      "org.scalameta" %% "munit" % "0.7.29" % Test,
+      "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test
+    ),
+    libraryDependencies ++= PartialFunction
+      .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
+        case Some((2, 12)) =>
+          "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1"
+      }
+      .toList
+  )
 
 lazy val trace4Cats = project
   .in(file("trace4cats"))
