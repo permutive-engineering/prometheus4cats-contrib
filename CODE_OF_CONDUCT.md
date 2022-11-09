@@ -9,6 +9,7 @@ Everyone is expected to follow the [Scala Code of Conduct] when discussing the p
 
 If you have any questions, concerns, or moderation requests, please contact a member of the project.
 
-- [Chris Jansen](mailto:andrew.valencik@gmail.com)
-
+- [Chris Jansen](mailto:chris.jansen@permutive.com)
+- [Tim Spence](mailto:tim.spence@permutive.com)
+-
 [Scala Code of Conduct]: https://scala-lang.org/conduct/
