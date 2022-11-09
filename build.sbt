@@ -25,7 +25,7 @@ lazy val root = tlCrossRootProject.aggregate(trace4Cats)
 lazy val trace4Cats = project
   .in(file("trace4cats"))
   .settings(
-    name := "prometheus4cats-trace4cats",
+    name := "prometheus4cats-contrib-trace4cats",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % "1.0.0-RC3",
       "io.janstenpickle" %% "trace4cats-kernel" % "0.14.0",
