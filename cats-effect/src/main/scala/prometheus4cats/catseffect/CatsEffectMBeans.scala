@@ -46,6 +46,32 @@ object CatsEffectMBeans {
   private val errorsHelp: Metric.Help =
     "Number of runtime errors encountered trying to read the value of a cats-effect JMX MBean attribute"
 
+  // taken from cats-effect scaladoc: https://github.com/typelevel/cats-effect/tree/series/3.x/core/jvm/src/main/scala/cats/effect/unsafe/metrics
+  private val attributeDescriptions = Map[String, Metric.Help](
+    "WorkerThreadCount" -> "the number of worker threads backing the compute pool",
+    "ActiveThreadCount" -> "the number of active worker threads",
+    "SearchingThreadCount" -> "the number of worker threads searching for work",
+    "BlockedWorkerThreadCount" -> "the number of blocked worker threads",
+    "LocalQueueFiberCount" -> "the total number of fibers enqueued on all local queues",
+    "SuspendedFiberCount" -> "the number of asynchronously suspended fibers",
+    "FiberCount" -> "the number of fibers enqueued on the local queue",
+    "HeadIndex" -> "the index representing the head of the queue",
+    "TailIndex" -> "the index representing the tail of the queue",
+    "TotalFiberCount" -> "the total number of fibers enqueued during the lifetime of the local queue",
+    "TotalSpilloverCount" -> "the total number of fibers spilt over to the external queue",
+    "SuccessfulStealAttemptCount" -> "the total number of successful steal attempts by other worker threads",
+    "StolenFiberCount" -> "the total number of stolen fibers by other worker threads"
+  )
+
+  // these MBeans should be rendered as Prometheus counters
+  private val counters = Set(
+    "LocalQueueFiberCount",
+    "TotalFiberCount",
+    "TotalSpilloverCount",
+    "SuccessfulStealAttemptCount",
+    "StolenFiberCount"
+  )
+
   def register[F[_]: Sync](
       factory: MetricFactory.WithCallbacks[F]
   ): Resource[F, Unit] = {
@@ -205,30 +231,39 @@ object CatsEffectMBeans {
       parseErrors: Int,
       errors: Int
   )(convert: Object => Long): (MetricCollection, Int, Int) = {
+    lazy val help = attributeDescriptions.getOrElse(
+      attribute.getName,
+      Metric.Help
+        .from(attribute.getDescription)
+        .getOrElse(Metric.Help("Cats effect MBean metric"))
+    )
+
+    def value(update: Long => MetricCollection) = Either.catchNonFatal(
+      convert(mbs.getAttribute(mbean.getObjectName, attribute.getName))
+    ) match {
+      case Left(_) => (collection, 0, 1)
+      case Right(long) =>
+        (
+          update(long),
+          parseErrors,
+          errors + 1
+        )
+    }
+
     nameMap.get(attribute.getName).fold((collection, parseErrors, errors)) {
       name =>
-        Gauge.Name.from(s"${prefix}_$name") match {
-          case Left(_) => (collection, parseErrors + 1, errors)
-          case Right(gaugeName) =>
-            Either.catchNonFatal(
-              convert(mbs.getAttribute(mbean.getObjectName, attribute.getName))
-            ) match {
-              case Left(_) => (collection, 0, 1)
-              case Right(long) =>
-                (
-                  collection.appendLongGauge(
-                    gaugeName,
-                    Metric.Help
-                      .from(attribute.getDescription)
-                      .getOrElse(Metric.Help("Cats effect MBean metric")),
-                    labels,
-                    long
-                  ),
-                  parseErrors,
-                  errors + 1
-                )
-            }
-        }
+        if (counters.contains(name))
+          Counter.Name.from(s"${prefix}_${name}_total") match {
+            case Left(_) => (collection, parseErrors + 1, errors)
+            case Right(counterName) =>
+              value(collection.appendLongCounter(counterName, help, labels, _))
+          }
+        else
+          Gauge.Name.from(s"${prefix}_$name") match {
+            case Left(_) => (collection, parseErrors + 1, errors)
+            case Right(gaugeName) =>
+              value(collection.appendLongGauge(gaugeName, help, labels, _))
+          }
     }
   }
 }
