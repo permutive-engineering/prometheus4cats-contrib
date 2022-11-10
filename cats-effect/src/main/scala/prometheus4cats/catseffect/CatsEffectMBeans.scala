@@ -252,7 +252,7 @@ object CatsEffectMBeans {
 
     nameMap.get(attribute.getName).fold((collection, parseErrors, errors)) {
       name =>
-        if (counters.contains(name))
+        if (counters.contains(attribute.getName))
           Counter.Name.from(s"${prefix}_${name}_total") match {
             case Left(_) => (collection, parseErrors + 1, errors)
             case Right(counterName) =>
