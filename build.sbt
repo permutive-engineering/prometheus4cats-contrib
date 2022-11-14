@@ -30,7 +30,7 @@ lazy val catsEffect = project
     name := "prometheus4cats-contrib-cats-effect",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "org.typelevel" %% "cats-effect" % "3.3.14"
+      "org.typelevel" %% "cats-effect" % "3.4.0"
     ),
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
