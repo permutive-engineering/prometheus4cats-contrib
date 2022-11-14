@@ -24,6 +24,8 @@ val Prometheus4Cats = "1.0.0-RC3"
 
 lazy val root = tlCrossRootProject.aggregate(catsEffect, trace4Cats)
 
+ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
+
 lazy val catsEffect = project
   .in(file("cats-effect"))
   .settings(
@@ -47,6 +49,16 @@ lazy val trace4Cats = project
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "io.janstenpickle" %% "trace4cats-kernel" % "0.14.0"
+    )
+  )
+
+lazy val refreshable = project
+  .in(file("refreshable"))
+  .settings(
+    name := "prometheus4cats-contrib-refreshable",
+    libraryDependencies ++= Seq(
+      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
+      "com.permutive" %% "refreshable" % "0.1.0"
     )
   )
 

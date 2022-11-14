@@ -1,0 +1,3 @@
+package prometheus4cats
+
+package object refreshable extends RefreshableBuilderSyntax with UpdatesBuilderSyntax
