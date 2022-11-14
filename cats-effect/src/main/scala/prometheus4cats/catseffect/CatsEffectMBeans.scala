@@ -20,6 +20,7 @@ import java.lang.management.ManagementFactory
 
 import cats.effect.kernel.{Resource, Sync}
 import cats.effect.syntax.resource._
+import cats.syntax.applicativeError._
 import cats.syntax.either._
 import cats.syntax.flatMap._
 import cats.syntax.traverse._
@@ -46,7 +47,12 @@ object CatsEffectMBeans {
   private val errorsHelp: Metric.Help =
     "Number of runtime errors encountered trying to read the value of a cats-effect JMX MBean attribute"
 
+  private val cpuStarvationObjectName = new ObjectName(
+    "cats.effect.metrics:type=CpuStarvation"
+  )
+
   // taken from cats-effect scaladoc: https://github.com/typelevel/cats-effect/tree/series/3.x/core/jvm/src/main/scala/cats/effect/unsafe/metrics
+  // and https://github.com/typelevel/cats-effect/blob/series/3.x/core/jvm/src/main/scala/cats/effect/metrics/CpuStarvationMbean.scala
   private val attributeDescriptions = Map[String, Metric.Help](
     "WorkerThreadCount" -> "the number of worker threads backing the compute pool",
     "ActiveThreadCount" -> "the number of active worker threads",
@@ -60,7 +66,10 @@ object CatsEffectMBeans {
     "TotalFiberCount" -> "the total number of fibers enqueued during the lifetime of the local queue",
     "TotalSpilloverCount" -> "the total number of fibers spilt over to the external queue",
     "SuccessfulStealAttemptCount" -> "the total number of successful steal attempts by other worker threads",
-    "StolenFiberCount" -> "the total number of stolen fibers by other worker threads"
+    "StolenFiberCount" -> "the total number of stolen fibers by other worker threads",
+    "CpuStarvationCount" -> "count of the number of times CPU starvation has occurred",
+    "MaxClockDriftMs" -> "the current maximum clock drift observed in milliseconds",
+    "CurrentClockDriftMs" -> "the current clock drift in milliseconds."
   )
 
   // these MBeans should be rendered as Prometheus counters
@@ -69,7 +78,8 @@ object CatsEffectMBeans {
     "TotalFiberCount",
     "TotalSpilloverCount",
     "SuccessfulStealAttemptCount",
-    "StolenFiberCount"
+    "StolenFiberCount",
+    "CpuStarvationCount"
   )
 
   def register[F[_]: Sync](
@@ -92,10 +102,15 @@ object CatsEffectMBeans {
         )
         .toSeq
 
+      cpuStarvation <- Sync[F]
+        .blocking(Option(mbs.getObjectInstance(cpuStarvationObjectName)))
+        .recover { case _: InstanceNotFoundException => None }
+        .toResource
+
       // pre-compute nicely formatted names for metrics from camelcase mbean names
       nameMap <- Sync[F]
         .blocking(
-          (queues ++ computePool).toList
+          (queues ++ computePool ++ cpuStarvation).toList
             .flatTraverse(makeNameMap(mbs, _))
             .map(_.toMap)
             .liftTo[F]
@@ -104,7 +119,9 @@ object CatsEffectMBeans {
         .toResource
 
       _ <- metricFactory
-        .metricCollectionCallback(callback(mbs, nameMap, computePool, queues))
+        .metricCollectionCallback(
+          callback(mbs, nameMap, computePool, queues, cpuStarvation)
+        )
         .build
     } yield ()
   }
@@ -129,7 +146,8 @@ object CatsEffectMBeans {
       mbs: MBeanServer,
       nameMap: Map[String, String],
       computePool: Option[ObjectInstance],
-      queues: Seq[ObjectInstance]
+      queues: Seq[ObjectInstance],
+      cpuStarvation: Option[ObjectInstance]
   ): F[MetricCollection] =
     Sync[F]
       .blocking(
@@ -147,9 +165,26 @@ object CatsEffectMBeans {
                 Map.empty
               )
             )
+          cpuStarvationRes <- cpuStarvation
+            .fold[Either[Throwable, (MetricCollection, Int, Int)]](
+              Right(computePoolRes)
+            ) { cpuStarvationMBean =>
+              val (col, parseErrors, errors) = computePoolRes
+
+              readAttributes(
+                mbs,
+                cpuStarvationMBean,
+                col,
+                "cpu_starvation",
+                nameMap,
+                Map.empty
+              ).map { case (c, pe, e) =>
+                (c, parseErrors + pe, errors + e)
+              }
+            }
           queuesRes <- queues
             .foldLeft[Either[Throwable, (MetricCollection, Int, Int)]](
-              Right(computePoolRes)
+              Right(cpuStarvationRes)
             ) {
               case (Right((col, parseErrors, errors)), mbean) =>
                 readAttributes(
