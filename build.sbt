@@ -22,6 +22,8 @@ ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Prometheus4Cats = "1.0.0-RC3"
 
+val CollectionCompat = "2.8.1"
+
 lazy val root =
   tlCrossRootProject.aggregate(
     catsEffect,
@@ -42,7 +44,7 @@ lazy val catsEffect = project
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
         case Some((2, 12)) =>
-          "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1"
+          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
       }
       .toList
   )
@@ -90,7 +92,13 @@ lazy val opencensus = project
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "io.opencensus" % "opencensus-impl" % "0.31.1"
-    )
+    ),
+    libraryDependencies ++= PartialFunction
+      .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
+        case Some((2, 12)) =>
+          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
+      }
+      .toList
   )
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
