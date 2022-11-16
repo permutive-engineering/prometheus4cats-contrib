@@ -19,7 +19,6 @@ package prometheus4cats
 import cats.effect.MonadCancelThrow
 import cats.effect.kernel.Resource
 import com.permutive.refreshable.Refreshable
-import prometheus4cats.MetricFactory
 import prometheus4cats.refreshable.InstrumentedRefreshable
 
 package object refreshable extends Priority0
