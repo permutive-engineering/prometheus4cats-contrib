@@ -22,8 +22,16 @@ ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Prometheus4Cats = "1.0.0-RC3"
 
+val CollectionCompat = "2.8.1"
+
 lazy val root =
-  tlCrossRootProject.aggregate(catsEffect, trace4Cats, refreshable)
+  tlCrossRootProject.aggregate(
+    catsEffect,
+    trace4Cats,
+    refreshable,
+    googleCloudBigtable,
+    opencensus
+  )
 
 lazy val catsEffect = project
   .in(file("cats-effect"))
@@ -36,7 +44,7 @@ lazy val catsEffect = project
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
         case Some((2, 12)) =>
-          "org.scala-lang.modules" %% "scala-collection-compat" % "2.8.1"
+          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
       }
       .toList
   )
@@ -59,6 +67,39 @@ lazy val refreshable = project
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "com.permutive" %% "refreshable" % "0.2.0"
     ),
+    mimaPreviousArtifacts := Set.empty
+  )
+
+lazy val googleCloudBigtable = project
+  .in(file("bigtable"))
+  .settings(
+    name := "prometheus4cats-contrib-google-cloud-bigtable",
+    libraryDependencies ++= Seq(
+      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
+      "com.google.cloud" % "google-cloud-bigtable" % "2.16.0",
+      "org.scalameta" %%% "munit" % "0.7.29" % Test,
+      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
+      "org.typelevel" %%% "cats-effect-testkit" % "3.4.0" % Test,
+      "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.153.0" % Test
+    ),
+    mimaPreviousArtifacts := Set.empty
+  )
+  .dependsOn(opencensus)
+
+lazy val opencensus = project
+  .in(file("opencensus"))
+  .settings(
+    name := "prometheus4cats-contrib-opencensus",
+    libraryDependencies ++= Seq(
+      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
+      "io.opencensus" % "opencensus-impl" % "0.31.1"
+    ),
+    libraryDependencies ++= PartialFunction
+      .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
+        case Some((2, 12)) =>
+          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
+      }
+      .toList,
     mimaPreviousArtifacts := Set.empty
   )
 
