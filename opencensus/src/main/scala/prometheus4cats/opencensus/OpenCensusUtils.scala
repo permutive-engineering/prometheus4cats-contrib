@@ -31,7 +31,7 @@ import prometheus4cats._
 
 import scala.jdk.CollectionConverters._
 
-// Derivied from https://github.com/census-instrumentation/opencensus-java/blob/master/exporters/stats/prometheus/src/main/java/io/opencensus/exporter/stats/prometheus/PrometheusExportUtils.java#L82
+// Derived from https://github.com/census-instrumentation/opencensus-java/blob/master/exporters/stats/prometheus/src/main/java/io/opencensus/exporter/stats/prometheus/PrometheusExportUtils.java#L82
 
 object OpenCensusUtils {
   private val parseErrorsGaugeName: Gauge.Name =
