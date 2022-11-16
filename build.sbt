@@ -58,7 +58,8 @@ lazy val refreshable = project
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "com.permutive" %% "refreshable" % "0.1.0"
-    )
+    ),
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
