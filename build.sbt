@@ -81,7 +81,8 @@ lazy val googleCloudBigtable = project
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
       "org.typelevel" %%% "cats-effect-testkit" % "3.4.0" % Test,
       "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.153.0" % Test
-    )
+    ),
+    mimaPreviousArtifacts := Set.empty
   )
   .dependsOn(opencensus)
 
@@ -98,7 +99,8 @@ lazy val opencensus = project
         case Some((2, 12)) =>
           "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
       }
-      .toList
+      .toList,
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
