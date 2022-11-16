@@ -211,9 +211,9 @@ object InstrumentedRefreshable {
         name: String,
         metricFactory: MetricFactory[F]
     ): Resource[F, Updates[F, A]] = metrics(name, metricFactory)(
-      builder.onNewValue,
-      builder.onRefreshFailure,
-      builder.onExhaustedRetries
+      builder.newValueCallback,
+      builder.refreshFailureCallback,
+      builder.exhaustedRetriesCallback
     ).toResource.flatMap {
       case (
             readCounter,
@@ -247,9 +247,9 @@ object InstrumentedRefreshable {
       metricFactory: MetricFactory[F]
   ): Resource[F, InstrumentedRefreshable[F, A]] =
     metrics(name, metricFactory)(
-      builder.onNewValue,
-      builder.onRefreshFailure,
-      builder.onExhaustedRetries
+      builder.newValueCallback,
+      builder.refreshFailureCallback,
+      builder.exhaustedRetriesCallback
     ).toResource.flatMap {
       case (
             readCounter,

@@ -57,7 +57,7 @@ lazy val refreshable = project
     name := "prometheus4cats-contrib-refreshable",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.permutive" %% "refreshable" % "0.1.0"
+      "com.permutive" %% "refreshable" % "0.2.0"
     ),
     mimaPreviousArtifacts := Set.empty
   )
