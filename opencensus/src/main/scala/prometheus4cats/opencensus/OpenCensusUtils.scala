@@ -184,8 +184,6 @@ object OpenCensusUtils {
               )
           })
         )
-
-      case _ => Right(col)
     }
   }
 
