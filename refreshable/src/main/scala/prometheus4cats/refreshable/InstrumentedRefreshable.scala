@@ -1,12 +1,12 @@
 package prometheus4cats.refreshable
 
-import cats.effect.kernel.{MonadCancelThrow, Resource}
+import cats.Applicative
 import cats.effect.kernel.syntax.monadCancel._
 import cats.effect.kernel.syntax.resource._
+import cats.effect.kernel.{MonadCancel, MonadCancelThrow, Resource}
 import cats.syntax.flatMap._
 import cats.syntax.foldable._
 import cats.syntax.functor._
-import cats.{Applicative, Monad}
 import com.permutive.refreshable.{CachedValue, Refreshable}
 import prometheus4cats._
 import retry.RetryDetails
@@ -20,22 +20,29 @@ class InstrumentedRefreshable[F[_], A] private (
     runningGauge: Gauge.Labelled[F, Boolean, String],
     exhaustedRetriesGauge: Gauge.Labelled[F, Boolean, String]
 )(implicit
-    override val functor: Monad[F]
+    override val functor: MonadCancel[F, _]
 ) extends Refreshable[F, A] {
-  override def get: F[CachedValue[A]] =
-    underlying.get.flatTap(value => readCounter.inc(name -> value))
+  override def get: F[CachedValue[A]] = functor.uncancelable { poll =>
+    poll(underlying.get.flatTap(value => readCounter.inc(name -> value)))
+  }
 
-  override def cancel: F[Boolean] =
-    underlying.cancel.flatTap(
-      if (_) runningGauge.set(false, name) else Applicative[F].unit
+  override def cancel: F[Boolean] = functor.uncancelable { poll =>
+    poll(
+      underlying.cancel.flatTap(
+        if (_) runningGauge.set(false, name) else Applicative[F].unit
+      )
     )
+  }
 
-  override def restart: F[Boolean] =
-    underlying.restart.flatTap(
-      if (_)
-        runningGauge.set(true, name) >> exhaustedRetriesGauge.set(false, name)
-      else Applicative[F].unit
+  override def restart: F[Boolean] = functor.uncancelable { poll =>
+    poll(
+      underlying.restart.flatTap(
+        if (_)
+          runningGauge.set(true, name) >> exhaustedRetriesGauge.set(false, name)
+        else Applicative[F].unit
+      )
     )
+  }
 }
 
 object InstrumentedRefreshable {
@@ -170,7 +177,7 @@ object InstrumentedRefreshable {
       runningGauge: Gauge.Labelled[F, Boolean, String],
       exhaustedRetriesGauge: Gauge.Labelled[F, Boolean, String]
   )(implicit
-      override val functor: Monad[F]
+      override val functor: MonadCancel[F, _]
   ) extends InstrumentedRefreshable[F, A](
         underlying,
         name,
