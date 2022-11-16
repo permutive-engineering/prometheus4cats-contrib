@@ -16,6 +16,33 @@
 
 package prometheus4cats
 
-package object refreshable
-    extends RefreshableBuilderSyntax
-    with UpdatesBuilderSyntax
+import cats.effect.MonadCancelThrow
+import cats.effect.kernel.Resource
+import com.permutive.refreshable.Refreshable
+import prometheus4cats.refreshable.InstrumentedRefreshable
+
+package object refreshable extends Priority0
+
+trait Priority0 extends Priority1 {
+  implicit class InstrumentedUpdatesBuilder[F[_], A](
+      builder: Refreshable.UpdatesBuilder[F, A]
+  ) {
+    def instrumentedResource(name: String, metricFactory: MetricFactory[F])(
+        implicit F: MonadCancelThrow[F]
+    ): Resource[F, InstrumentedRefreshable.Updates[F, A]] =
+      InstrumentedRefreshable.Updates.create(builder, name, metricFactory)
+  }
+
+}
+
+trait Priority1 {
+
+  implicit class InstrumentedRefreshableBuilder[F[_], A](
+      builder: Refreshable.RefreshableBuilder[F, A]
+  ) {
+    def instrumentedResource(name: String, metricFactory: MetricFactory[F])(
+        implicit F: MonadCancelThrow[F]
+    ): Resource[F, InstrumentedRefreshable[F, A]] =
+      InstrumentedRefreshable.create(builder, name, metricFactory)
+  }
+}
