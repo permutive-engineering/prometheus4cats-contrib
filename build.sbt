@@ -22,7 +22,8 @@ ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Prometheus4Cats = "1.0.0-RC3"
 
-lazy val root = tlCrossRootProject.aggregate(catsEffect, trace4Cats)
+lazy val root =
+  tlCrossRootProject.aggregate(catsEffect, trace4Cats, refreshable)
 
 lazy val catsEffect = project
   .in(file("cats-effect"))
