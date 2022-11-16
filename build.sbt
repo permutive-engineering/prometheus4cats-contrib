@@ -24,8 +24,6 @@ val Prometheus4Cats = "1.0.0-RC3"
 
 lazy val root = tlCrossRootProject.aggregate(catsEffect, trace4Cats)
 
-ThisBuild / resolvers ++= Resolver.sonatypeOssRepos("snapshots")
-
 lazy val catsEffect = project
   .in(file("cats-effect"))
   .settings(
