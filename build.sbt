@@ -22,7 +22,8 @@ ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Prometheus4Cats = "1.0.0-RC3"
 
-lazy val root = tlCrossRootProject.aggregate(catsEffect, trace4Cats)
+lazy val root =
+  tlCrossRootProject.aggregate(catsEffect, trace4Cats, refreshable)
 
 lazy val catsEffect = project
   .in(file("cats-effect"))
@@ -48,6 +49,17 @@ lazy val trace4Cats = project
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "io.janstenpickle" %% "trace4cats-kernel" % "0.14.0"
     )
+  )
+
+lazy val refreshable = project
+  .in(file("refreshable"))
+  .settings(
+    name := "prometheus4cats-contrib-refreshable",
+    libraryDependencies ++= Seq(
+      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
+      "com.permutive" %% "refreshable" % "0.2.0"
+    ),
+    mimaPreviousArtifacts := Set.empty
   )
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
