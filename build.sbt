@@ -1,5 +1,5 @@
 // https://typelevel.org/sbt-typelevel/faq.html#what-is-a-base-version-anyway
-ThisBuild / tlBaseVersion := "0.1" // your current series x.y
+ThisBuild / tlBaseVersion := "0.2" // your current series x.y
 
 ThisBuild / organization := "com.permutive"
 ThisBuild / organizationName := "Permutive"
@@ -66,8 +66,7 @@ lazy val refreshable = project
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "com.permutive" %% "refreshable" % "0.2.0"
-    ),
-    mimaPreviousArtifacts := Set.empty
+    )
   )
 
 lazy val googleCloudBigtable = project
@@ -81,8 +80,7 @@ lazy val googleCloudBigtable = project
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
       "org.typelevel" %%% "cats-effect-testkit" % "3.4.0" % Test,
       "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.153.0" % Test
-    ),
-    mimaPreviousArtifacts := Set.empty
+    )
   )
   .dependsOn(opencensus)
 
@@ -99,8 +97,7 @@ lazy val opencensus = project
         case Some((2, 12)) =>
           "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
       }
-      .toList,
-    mimaPreviousArtifacts := Set.empty
+      .toList
   )
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
