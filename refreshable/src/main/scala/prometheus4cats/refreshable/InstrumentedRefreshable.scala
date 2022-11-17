@@ -41,25 +41,23 @@ class InstrumentedRefreshable[F[_], A] private (
     override val functor: MonadCancel[F, _]
 ) extends Refreshable[F, A] {
   override def get: F[CachedValue[A]] = functor.uncancelable { poll =>
-    poll(underlying.get.flatTap(value => readCounter.inc(name -> value)))
+    poll(underlying.get).flatTap(value => readCounter.inc(name -> value))
   }
 
   override def cancel: F[Boolean] = functor.uncancelable { poll =>
-    poll(
-      underlying.cancel.flatTap(
-        if (_) runningGauge.set(false, name) else Applicative[F].unit
-      )
+    poll(underlying.cancel).flatTap(
+      if (_) runningGauge.set(false, name) else Applicative[F].unit
     )
+
   }
 
   override def restart: F[Boolean] = functor.uncancelable { poll =>
-    poll(
-      underlying.restart.flatTap(
-        if (_)
-          runningGauge.set(true, name) >> exhaustedRetriesGauge.set(false, name)
-        else Applicative[F].unit
-      )
+    poll(underlying.restart).flatTap(
+      if (_)
+        runningGauge.set(true, name) >> exhaustedRetriesGauge.set(false, name)
+      else Applicative[F].unit
     )
+
   }
 }
 
@@ -398,15 +396,14 @@ object InstrumentedRefreshable {
           .as {
             // Set the running gauge on read as we can't do this via callback or from the stream
             val setRunningGauge = MonadCancelThrow[F].uncancelable { poll =>
-              poll(
-                refreshable.get.flatTap(value =>
-                  readCounter.inc(name -> value) >> (value match {
-                    case CachedValue.Cancelled(_) =>
-                      runningGauge.set(false, name)
-                    case _ => runningGauge.set(true, name)
-                  })
-                )
+              poll(refreshable.get).flatTap(value =>
+                readCounter.inc(name -> value) >> (value match {
+                  case CachedValue.Cancelled(_) =>
+                    runningGauge.set(false, name)
+                  case _ => runningGauge.set(true, name)
+                })
               )
+
             }
 
             new InstrumentedRefreshable[F, A](
