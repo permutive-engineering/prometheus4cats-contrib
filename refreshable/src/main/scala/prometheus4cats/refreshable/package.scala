@@ -17,7 +17,7 @@
 package prometheus4cats
 
 import cats.effect.MonadCancelThrow
-import cats.effect.kernel.Resource
+import cats.effect.kernel.{Async, Resource}
 import com.permutive.refreshable.Refreshable
 import prometheus4cats.refreshable.InstrumentedRefreshable
 
@@ -27,10 +27,29 @@ trait Priority0 extends Priority1 {
   implicit class InstrumentedUpdatesBuilder[F[_], A](
       builder: Refreshable.UpdatesBuilder[F, A]
   ) {
-    def instrumentedResource(name: String, metricFactory: MetricFactory[F])(
-        implicit F: MonadCancelThrow[F]
+    def instrumentedResource(
+        name: String,
+        metricFactory: MetricFactory.WithCallbacks[F]
+    )(implicit
+        F: MonadCancelThrow[F]
     ): Resource[F, InstrumentedRefreshable.Updates[F, A]] =
       InstrumentedRefreshable.Updates.create(builder, name, metricFactory)
+  }
+
+  implicit class InstrumentedRefreshableUpdatesSyntax[F[_], A](
+      refreshable: Refreshable.Updates[F, A]
+  ) {
+    def instrumented(
+        name: String,
+        metricFactory: MetricFactory.WithCallbacks[F]
+    )(implicit
+        F: Async[F]
+    ): Resource[F, InstrumentedRefreshable.Updates[F, A]] =
+      InstrumentedRefreshable.Updates.fromExisting(
+        refreshable,
+        name,
+        metricFactory
+      )
   }
 
 }
@@ -40,9 +59,28 @@ trait Priority1 {
   implicit class InstrumentedRefreshableBuilder[F[_], A](
       builder: Refreshable.RefreshableBuilder[F, A]
   ) {
-    def instrumentedResource(name: String, metricFactory: MetricFactory[F])(
-        implicit F: MonadCancelThrow[F]
+    def instrumentedResource(
+        name: String,
+        metricFactory: MetricFactory.WithCallbacks[F]
+    )(implicit
+        F: MonadCancelThrow[F]
     ): Resource[F, InstrumentedRefreshable[F, A]] =
       InstrumentedRefreshable.create(builder, name, metricFactory)
+  }
+
+  implicit class InstrumentedRefreshableSyntax[F[_], A](
+      refreshable: Refreshable[F, A]
+  ) {
+    def instrumented(
+        name: String,
+        metricFactory: MetricFactory.WithCallbacks[F]
+    )(implicit
+        F: MonadCancelThrow[F]
+    ): Resource[F, InstrumentedRefreshable[F, A]] =
+      InstrumentedRefreshable.fromExisting(
+        refreshable,
+        name,
+        metricFactory
+      )
   }
 }
