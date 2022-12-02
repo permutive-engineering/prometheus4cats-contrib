@@ -17,12 +17,12 @@ ThisBuild / tlSonatypeUseLegacyHost := true
 ThisBuild / tlSitePublishBranch := Some("main")
 
 val Scala213 = "2.13.10"
-ThisBuild / crossScalaVersions := Seq("2.12.15", Scala213, "3.2.0")
+ThisBuild / crossScalaVersions := Seq("2.12.17", Scala213, "3.2.1")
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Prometheus4Cats = "1.0.0-RC3"
 
-val CollectionCompat = "2.8.1"
+val CollectionCompat = "2.9.0"
 
 lazy val root =
   tlCrossRootProject.aggregate(
@@ -39,7 +39,7 @@ lazy val catsEffect = project
     name := "prometheus4cats-contrib-cats-effect",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "org.typelevel" %% "cats-effect" % "3.4.0"
+      "org.typelevel" %% "cats-effect" % "3.4.1"
     ),
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
@@ -78,7 +78,7 @@ lazy val googleCloudBigtable = project
       "com.google.cloud" % "google-cloud-bigtable" % "2.16.0",
       "org.scalameta" %%% "munit" % "0.7.29" % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
-      "org.typelevel" %%% "cats-effect-testkit" % "3.4.0" % Test,
+      "org.typelevel" %%% "cats-effect-testkit" % "3.4.1" % Test,
       "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.153.0" % Test
     )
   )
