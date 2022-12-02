@@ -38,20 +38,22 @@ class InstrumentedRefreshable[F[_], A] private (
     runningGauge: Gauge.Labelled[F, Boolean, String],
     exhaustedRetriesGauge: Gauge.Labelled[F, Boolean, String]
 )(implicit
-    override val functor: MonadCancel[F, _]
+    F: MonadCancel[F, _]
 ) extends Refreshable[F, A] {
-  override def get: F[CachedValue[A]] = functor.uncancelable { poll =>
+  override def get: F[CachedValue[A]] = F.uncancelable { poll =>
     poll(underlying.get).flatTap(value => readCounter.inc(name -> value))
   }
 
-  override def cancel: F[Boolean] = functor.uncancelable { poll =>
+  override def cancel: F[Boolean] = F.uncancelable { poll =>
     poll(underlying.cancel).flatTap(
       if (_) runningGauge.set(false, name) else Applicative[F].unit
     )
 
   }
 
-  override def restart: F[Boolean] = functor.uncancelable { poll =>
+  override def updates: fs2.Stream[F, CachedValue[A]] = underlying.updates
+
+  override def restart: F[Boolean] = F.uncancelable { poll =>
     poll(underlying.restart).flatTap(
       if (_)
         runningGauge.set(true, name) >> exhaustedRetriesGauge.set(false, name)
@@ -242,114 +244,6 @@ object InstrumentedRefreshable {
       }
   }
 
-  class Updates[F[_], A](
-      underlying: Refreshable.Updates[F, A],
-      name: String,
-      readCounter: Counter.Labelled[F, Long, (String, CachedValue[A])],
-      runningGauge: Gauge.Labelled[F, Boolean, String],
-      exhaustedRetriesGauge: Gauge.Labelled[F, Boolean, String]
-  )(implicit
-      override val functor: MonadCancel[F, _]
-  ) extends InstrumentedRefreshable[F, A](
-        underlying,
-        name,
-        readCounter,
-        runningGauge,
-        exhaustedRetriesGauge
-      )
-      with Refreshable.Updates[F, A] {
-    override def updates: fs2.Stream[F, CachedValue[A]] = underlying.updates
-  }
-
-  object Updates {
-    def create[F[_]: MonadCancelThrow, A](
-        builder: Refreshable.UpdatesBuilder[F, A],
-        name: String,
-        metricFactory: MetricFactory.WithCallbacks[F]
-    ): Resource[F, Updates[F, A]] = metrics(name, metricFactory)(
-      builder.newValueCallback,
-      builder.refreshFailureCallback,
-      builder.exhaustedRetriesCallback
-    ).toResource.flatMap {
-      case (
-            readCounter,
-            runningGauge,
-            exhaustedRetriesGauge,
-            onNewValue,
-            onRefreshFailure,
-            onExhaustedRetries
-          ) =>
-        builder
-          .onNewValue(onNewValue)
-          .onRefreshFailure(onRefreshFailure)
-          .onExhaustedRetries(onExhaustedRetries)
-          .resource
-          .evalTap(_ => runningGauge.set(true, name))
-//          .flatTap(callback(name, _, metricFactory))
-          .map { refreshable =>
-            new InstrumentedRefreshable.Updates[F, A](
-              refreshable,
-              name,
-              readCounter,
-              runningGauge,
-              exhaustedRetriesGauge
-            )
-          }
-    }
-
-    def fromExisting[F[_]: Async, A](
-        refreshable: Refreshable.Updates[F, A],
-        name: String,
-        metricFactory: MetricFactory.WithCallbacks[F]
-    ): Resource[F, InstrumentedRefreshable.Updates[F, A]] =
-      (
-        instanceMetrics[F, A](metricFactory).toResource,
-        callbackMetrics(metricFactory).toResource
-      )
-        .flatMapN {
-          case (
-                (readCounter, runningGauge, exhaustedRetriesGauge),
-                (
-                  refreshSuccessCounter,
-                  currentlyFailingGauge,
-                  refreshFailureCounter
-                )
-              ) =>
-//            callback(name, refreshable, metricFactory)
-//              .evalTap(_ =>
-//              runningGauge.set(true, name)
-//            )
-            runningGauge.set(true, name).toResource >> refreshable.updates
-              .evalMap {
-                case CachedValue.Success(_) =>
-                  refreshSuccessCounter
-                    .inc(name) >> currentlyFailingGauge.set(
-                    false,
-                    name
-                  ) >> runningGauge.set(true, name)
-                case CachedValue.Error(_, _) =>
-                  refreshFailureCounter
-                    .inc(name) >> currentlyFailingGauge.set(
-                    true,
-                    name
-                  ) >> runningGauge.set(true, name)
-                case CachedValue.Cancelled(_) => runningGauge.set(false, name)
-              }
-              .compile
-              .drain
-              .background
-              .as(
-                new InstrumentedRefreshable.Updates[F, A](
-                  refreshable,
-                  name,
-                  readCounter,
-                  runningGauge,
-                  exhaustedRetriesGauge
-                )
-              )
-        }
-  }
-
   def create[F[_]: MonadCancelThrow, A](
       builder: Refreshable.RefreshableBuilder[F, A],
       name: String,
@@ -386,39 +280,54 @@ object InstrumentedRefreshable {
           }
     }
 
-  def fromExisting[F[_]: MonadCancelThrow, A](
+  def fromExisting[F[_]: Async, A](
       refreshable: Refreshable[F, A],
       name: String,
       metricFactory: MetricFactory.WithCallbacks[F]
   ): Resource[F, InstrumentedRefreshable[F, A]] =
-    instanceMetrics[F, A](metricFactory).toResource
-//      .flatTap(_ => callback(name, refreshable, metricFactory))
-      .evalMap { case (readCounter, runningGauge, exhaustedRetriesGauge) =>
-        runningGauge
-          .set(true, name)
-          .as {
-            // Set the running gauge on read as we can't do this via callback or from the stream
-            val setRunningGauge = MonadCancelThrow[F].uncancelable { poll =>
-              poll(refreshable.get).flatTap(value =>
-                readCounter.inc(name -> value) >> (value match {
-                  case CachedValue.Cancelled(_) =>
-                    runningGauge.set(false, name)
-                  case _ => runningGauge.set(true, name)
-                })
+    (
+      instanceMetrics[F, A](metricFactory).toResource,
+      callbackMetrics(metricFactory).toResource
+    )
+      .flatMapN {
+        case (
+              (readCounter, runningGauge, exhaustedRetriesGauge),
+              (
+                refreshSuccessCounter,
+                currentlyFailingGauge,
+                refreshFailureCounter
               )
-
+            ) =>
+//          callback(name, refreshable, metricFactory)
+//            .evalTap(_ => runningGauge.set(true, name))
+          runningGauge.set(true, name).toResource >> refreshable.updates
+            .evalMap {
+              case CachedValue.Success(_) =>
+                refreshSuccessCounter
+                  .inc(name) >> currentlyFailingGauge.set(
+                  false,
+                  name
+                ) >> runningGauge.set(true, name)
+              case CachedValue.Error(_, _) =>
+                refreshFailureCounter
+                  .inc(name) >> currentlyFailingGauge.set(
+                  true,
+                  name
+                ) >> runningGauge.set(true, name)
+              case CachedValue.Cancelled(_) => runningGauge.set(false, name)
             }
-
-            new InstrumentedRefreshable[F, A](
-              refreshable,
-              name,
-              readCounter,
-              runningGauge,
-              exhaustedRetriesGauge
-            ) {
-              override def get: F[CachedValue[A]] = setRunningGauge
-            }
-          }
+            .compile
+            .drain
+            .background
+            .as(
+              new InstrumentedRefreshable[F, A](
+                refreshable,
+                name,
+                readCounter,
+                runningGauge,
+                exhaustedRetriesGauge
+              )
+            )
       }
 
 }
