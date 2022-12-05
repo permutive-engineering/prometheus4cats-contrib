@@ -20,7 +20,7 @@ import cats.Applicative
 import cats.effect.kernel.syntax.monadCancel._
 import cats.effect.kernel.syntax.resource._
 import cats.effect.kernel.syntax.spawn._
-import cats.effect.kernel.{Async, MonadCancel, MonadCancelThrow, Resource}
+import cats.effect.kernel.{Async, MonadCancel, MonadCancelThrow, Poll, Resource}
 import cats.syntax.apply._
 import cats.syntax.flatMap._
 import cats.syntax.foldable._
@@ -300,25 +300,30 @@ object InstrumentedRefreshable {
             ) =>
 //          callback(name, refreshable, metricFactory)
 //            .evalTap(_ => runningGauge.set(true, name))
-          runningGauge.set(true, name).toResource >> refreshable.updates
-            .evalMap {
-              case CachedValue.Success(_) =>
-                refreshSuccessCounter
-                  .inc(name) >> currentlyFailingGauge.set(
-                  false,
-                  name
-                ) >> runningGauge.set(true, name)
-              case CachedValue.Error(_, _) =>
-                refreshFailureCounter
-                  .inc(name) >> currentlyFailingGauge.set(
-                  true,
-                  name
-                ) >> runningGauge.set(true, name)
-              case CachedValue.Cancelled(_) => runningGauge.set(false, name)
-            }
-            .compile
-            .drain
-            .background
+          Resource
+            .uncancelable((_: Poll[Resource[F, *]]) =>
+              Resource.make(runningGauge.set(true, name))(_ =>
+                runningGauge.set(false, name)
+              ) >> refreshable.updates
+                .evalMap {
+                  case CachedValue.Success(_) =>
+                    refreshSuccessCounter
+                      .inc(name) >> currentlyFailingGauge.set(
+                      false,
+                      name
+                    ) >> runningGauge.set(true, name)
+                  case CachedValue.Error(_, _) =>
+                    refreshFailureCounter
+                      .inc(name) >> currentlyFailingGauge.set(
+                      true,
+                      name
+                    ) >> runningGauge.set(true, name)
+                  case CachedValue.Cancelled(_) => runningGauge.set(false, name)
+                }
+                .compile
+                .drain
+                .background
+            )
             .as(
               new InstrumentedRefreshable[F, A](
                 refreshable,
