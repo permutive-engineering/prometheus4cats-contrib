@@ -1,5 +1,5 @@
 // https://typelevel.org/sbt-typelevel/faq.html#what-is-a-base-version-anyway
-ThisBuild / tlBaseVersion := "0.2" // your current series x.y
+ThisBuild / tlBaseVersion := "0.3" // your current series x.y
 
 ThisBuild / organization := "com.permutive"
 ThisBuild / organizationName := "Permutive"
@@ -65,7 +65,7 @@ lazy val refreshable = project
     name := "prometheus4cats-contrib-refreshable",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.permutive" %% "refreshable" % "0.2.0"
+      "com.permutive" %% "refreshable" % "1.0.0"
     )
   )
 
