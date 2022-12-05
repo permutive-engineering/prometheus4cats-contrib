@@ -19,11 +19,9 @@ package prometheus4cats
 import cats.effect.MonadCancelThrow
 import cats.effect.kernel.{Async, Resource}
 import com.permutive.refreshable.Refreshable
-import prometheus4cats.refreshable.InstrumentedRefreshable
 
-package object refreshable extends Priority0
+package object refreshable {
 
-trait Priority0 {
   implicit class InstrumentedUpdatesBuilder[F[_], A](
       builder: Refreshable.RefreshableBuilder[F, A]
   ) {
