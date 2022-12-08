@@ -65,7 +65,7 @@ lazy val refreshable = project
     name := "prometheus4cats-contrib-refreshable",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.permutive" %% "refreshable" % "1.0.0"
+      "com.permutive" %% "refreshable" % "1.1.0"
     )
   )
 
