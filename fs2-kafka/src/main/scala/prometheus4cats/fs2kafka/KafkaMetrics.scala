@@ -124,7 +124,7 @@ object KafkaMetrics {
     ): Either[ParseError, MetricCollection] =
       Counter.Name
         .from(metricName)
-        .leftMap(ParseError.InvalidName)
+        .leftMap(ParseError.InvalidName(_))
         .flatMap(name =>
           convertMetricValue(metric)(
             col.appendLongCounter(name, help, labels, _),
@@ -141,7 +141,7 @@ object KafkaMetrics {
     ): Either[ParseError, MetricCollection] =
       Gauge.Name
         .from(metricName)
-        .leftMap(ParseError.InvalidName)
+        .leftMap(ParseError.InvalidName(_))
         .flatMap(name =>
           convertMetricValue(metric)(
             col.appendLongGauge(name, help, labels, _),
