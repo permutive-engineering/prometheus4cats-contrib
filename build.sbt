@@ -30,7 +30,8 @@ lazy val root =
     trace4Cats,
     refreshable,
     googleCloudBigtable,
-    opencensus
+    opencensus,
+    fs2Kafka
   )
 
 lazy val catsEffect = project
@@ -98,6 +99,23 @@ lazy val opencensus = project
           "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
       }
       .toList
+  )
+
+lazy val fs2Kafka = project
+  .in(file("fs2-kafka"))
+  .settings(
+    name := "prometheus4cats-contrib-fs2-kafka",
+    libraryDependencies ++= Seq(
+      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
+      "com.github.fd4s" %% "fs2-kafka" % "2.5.0",
+      "com.dimafeng" %% "testcontainers-scala-munit" % "0.40.12" % Test,
+      "com.dimafeng" %% "testcontainers-scala-kafka" % "0.40.12" % Test,
+      "com.permutive" %% "prometheus4cats-java" % Prometheus4Cats % Test,
+      "ch.qos.logback" % "logback-classic" % "1.4.5" % Test,
+      "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
+      "org.typelevel" %% "cats-effect-testkit" % "3.4.1" % Test,
+      "org.typelevel" %% "log4cats-slf4j" % "2.5.0" % Test
+    )
   )
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
