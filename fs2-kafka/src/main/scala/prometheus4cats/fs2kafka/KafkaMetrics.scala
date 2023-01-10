@@ -194,7 +194,7 @@ object KafkaMetrics {
 
                 acc.updated(transformedName, newMetrics)
               case None =>
-                acc.updated(transformedName, Map((name , (metric, labels))))
+                acc.updated(transformedName, Map((name, (metric, labels))))
             }
           }
 
