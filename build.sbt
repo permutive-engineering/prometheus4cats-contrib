@@ -115,7 +115,13 @@ lazy val fs2Kafka = project
       "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
       "org.typelevel" %% "cats-effect-testkit" % "3.4.1" % Test,
       "org.typelevel" %% "log4cats-slf4j" % "2.5.0" % Test
-    )
+    ),
+    libraryDependencies ++= PartialFunction
+      .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
+        case Some((2, 12)) =>
+          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
+      }
+      .toList
   )
 
 lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
