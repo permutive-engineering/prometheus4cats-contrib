@@ -226,8 +226,8 @@ object KafkaMetrics {
 
         }
 
-        val errorGaugeValues = errors
-          .groupMapReduce(identity)(_ => 1L)(_ + _)
+        val errorGaugeValues = IterableUtils
+          .groupMapReduce(errors)(identity)(_ => 1L)(_ + _)
           .view
           .map { case (err, v) =>
             v -> (IndexedSeq(
