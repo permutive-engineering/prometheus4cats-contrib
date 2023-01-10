@@ -1,5 +1,5 @@
 // https://typelevel.org/sbt-typelevel/faq.html#what-is-a-base-version-anyway
-ThisBuild / tlBaseVersion := "0.3" // your current series x.y
+ThisBuild / tlBaseVersion := "0.4" // your current series x.y
 
 ThisBuild / organization := "com.permutive"
 ThisBuild / organizationName := "Permutive"
@@ -30,7 +30,8 @@ lazy val root =
     trace4Cats,
     refreshable,
     googleCloudBigtable,
-    opencensus
+    opencensus,
+    fs2Kafka
   )
 
 lazy val catsEffect = project
@@ -91,6 +92,29 @@ lazy val opencensus = project
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "io.opencensus" % "opencensus-impl" % "0.31.1"
+    ),
+    libraryDependencies ++= PartialFunction
+      .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
+        case Some((2, 12)) =>
+          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
+      }
+      .toList
+  )
+
+lazy val fs2Kafka = project
+  .in(file("fs2-kafka"))
+  .settings(
+    name := "prometheus4cats-contrib-fs2-kafka",
+    libraryDependencies ++= Seq(
+      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
+      "com.github.fd4s" %% "fs2-kafka" % "2.5.0",
+      "com.dimafeng" %% "testcontainers-scala-munit" % "0.40.12" % Test,
+      "com.dimafeng" %% "testcontainers-scala-kafka" % "0.40.12" % Test,
+      "com.permutive" %% "prometheus4cats-java" % Prometheus4Cats % Test,
+      "ch.qos.logback" % "logback-classic" % "1.2.11" % Test, // scala-steward:off
+      "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
+      "org.typelevel" %% "cats-effect-testkit" % "3.4.1" % Test,
+      "org.typelevel" %% "log4cats-slf4j" % "2.5.0" % Test
     ),
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
