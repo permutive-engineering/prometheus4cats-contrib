@@ -188,15 +188,13 @@ object KafkaMetrics {
 
                 val newMetrics = metrics
                   .updated(name, (metric, labels))
-                  .view
-                  .mapValues { case (metric, labels) =>
-                    metric -> conformLabels(allKeys, labels)
+                  .map { case (k, (metric, labels)) =>
+                    (k, (metric, conformLabels(allKeys, labels)))
                   }
-                  .toMap
 
                 acc.updated(transformedName, newMetrics)
               case None =>
-                acc.updated(transformedName, Map(name -> (metric, labels)))
+                acc.updated(transformedName, Map((name , (metric, labels))))
             }
           }
 
