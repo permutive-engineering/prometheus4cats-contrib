@@ -129,7 +129,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
     Resource.eval(IO.delay(new CollectorRegistry())).flatMap { reg =>
       JavaMetricRegistry
         .fromSimpleClientRegistry[IO](
-          reg,
+          reg
         )
         .map(MetricFactory.builder.build(_) -> reg)
     }
