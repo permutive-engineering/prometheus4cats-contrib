@@ -129,8 +129,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
     Resource.eval(IO.delay(new CollectorRegistry())).flatMap { reg =>
       JavaMetricRegistry
         .fromSimpleClientRegistry[IO](
-          reg,
-          metricCollectionCallbackTimeout = 1.second
+          reg
         )
         .map(MetricFactory.builder.build(_) -> reg)
     }

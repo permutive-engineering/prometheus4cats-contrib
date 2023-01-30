@@ -16,7 +16,8 @@
 
 package prometheus4cats.refreshable
 
-import cats.Applicative
+import cats.data.NonEmptyList
+import cats.{Applicative, Functor}
 import cats.effect.kernel.syntax.monadCancel._
 import cats.effect.kernel.syntax.resource._
 import cats.effect.kernel.syntax.spawn._
@@ -144,30 +145,27 @@ object InstrumentedRefreshable {
     ).tupled
   }
 
-  // TODO this might need a new release of prometheus4cats so multiple label values can be returned to represent when
-  //  there are no errors or no cancellation, we'll have to see how this looks in prometheus
-  // FIXME multiple instances of this callback break prometheus4cats
-//  private def callback[F[_]: Functor, A](
-//      name: String,
-//      refreshable: Refreshable[F, A],
-//      metricFactory: MetricFactory.WithCallbacks[F]
-//  ): Resource[F, Unit] =
-//    metricFactory
-//      .withPrefix(prefix)
-//      .gauge("status")
-//      .ofLong
-//      .help("The current status of this Refreshable")
-//      .label[String](refreshableLabelName)
-//      .label[CachedValue[A]](
-//        "value_state",
-//        {
-//          case CachedValue.Success(_)   => "success"
-//          case CachedValue.Error(_, _)  => "error"
-//          case CachedValue.Cancelled(_) => "cancelled"
-//        }
-//      )
-//      .callback(refreshable.get.map { v => (1, (name, v)) })
-//      .build
+  private def callback[F[_]: Functor, A](
+      name: String,
+      refreshable: Refreshable[F, A],
+      metricFactory: MetricFactory.WithCallbacks[F]
+  ): Resource[F, Unit] =
+    metricFactory
+      .withPrefix(prefix)
+      .gauge("status")
+      .ofLong
+      .help("The current status of this Refreshable")
+      .label[String](refreshableLabelName)
+      .label[CachedValue[A]](
+        "value_state",
+        {
+          case CachedValue.Success(_)   => "success"
+          case CachedValue.Error(_, _)  => "error"
+          case CachedValue.Cancelled(_) => "cancelled"
+        }
+      )
+      .callback(refreshable.get.map { v => NonEmptyList.one((1L, (name, v))) })
+      .build
 
   private def metrics[F[_]: MonadCancelThrow, A](
       name: String,
@@ -268,7 +266,7 @@ object InstrumentedRefreshable {
           .onExhaustedRetries(onExhaustedRetries)
           .resource
           .evalTap(_ => runningGauge.set(true, name))
-//          .flatTap(callback(name, _, metricFactory))
+          .flatTap(callback(name, _, metricFactory))
           .map { refreshable =>
             new InstrumentedRefreshable[F, A](
               refreshable,
@@ -298,9 +296,7 @@ object InstrumentedRefreshable {
                 refreshFailureCounter
               )
             ) =>
-//          callback(name, refreshable, metricFactory)
-//            .evalTap(_ => runningGauge.set(true, name))
-          Resource
+          callback(name, refreshable, metricFactory) >> Resource
             .uncancelable((_: Poll[Resource[F, *]]) =>
               Resource.make(runningGauge.set(true, name))(_ =>
                 runningGauge.set(false, name)
