@@ -66,7 +66,7 @@ lazy val refreshable = project
     name := "prometheus4cats-contrib-refreshable",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.permutive" %% "refreshable" % "1.0.0"
+      "com.permutive" %% "refreshable" % "1.1.0"
     )
   )
 
@@ -76,11 +76,11 @@ lazy val googleCloudBigtable = project
     name := "prometheus4cats-contrib-google-cloud-bigtable",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.google.cloud" % "google-cloud-bigtable" % "2.16.0",
+      "com.google.cloud" % "google-cloud-bigtable" % "2.18.3",
       "org.scalameta" %%% "munit" % "0.7.29" % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
       "org.typelevel" %%% "cats-effect-testkit" % "3.4.5" % Test,
-      "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.153.0" % Test
+      "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.155.3" % Test
     )
   )
   .dependsOn(opencensus)
