@@ -20,6 +20,8 @@ import _root_.trace4cats.kernel.SpanCompleter
 import cats.data.NonEmptySeq
 import cats.effect.MonadCancelThrow
 import cats.effect.kernel.{Clock, Resource}
+// TODO remove once upstream fixed
+import prometheus4cats.Exemplar.Implicits.noop
 import prometheus4cats.{Label, MetricFactory}
 import trace4cats.model.CompletedSpan
 

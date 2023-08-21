@@ -23,6 +23,8 @@ import cats.effect.MonadCancelThrow
 import cats.effect.kernel.{Clock, Resource}
 import cats.syntax.flatMap._
 import cats.syntax.unorderedFoldable._
+// TODO remove once upstream fixed
+import prometheus4cats.Exemplar.Implicits.noop
 import prometheus4cats.{Label, MetricFactory}
 import trace4cats.model.Batch
 
@@ -74,7 +76,7 @@ object InstrumentedSpanExporter {
       override def exportBatch(batch: Batch[G]): F[Unit] = timer.time(
         outcomeRecorder.surround(exporter.exportBatch(batch), exporterName),
         exporterName
-      ) >> batchSize.observe(batch.spans.size, exporterName)
+      )((_, _, _) => false) >> batchSize.observe(batch.spans.size, exporterName)
     }
   }
 }

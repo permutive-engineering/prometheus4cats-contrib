@@ -35,9 +35,9 @@ import scala.concurrent.duration.FiniteDuration
 class InstrumentedRefreshable[F[_], A] private (
     underlying: Refreshable[F, A],
     name: String,
-    readCounter: Counter.Labelled[F, Long, (String, CachedValue[A])],
-    runningGauge: Gauge.Labelled[F, Boolean, String],
-    exhaustedRetriesGauge: Gauge.Labelled[F, Boolean, String]
+    readCounter: Counter[F, Long, (String, CachedValue[A])],
+    runningGauge: Gauge[F, Boolean, String],
+    exhaustedRetriesGauge: Gauge[F, Boolean, String]
 )(implicit
     F: MonadCancel[F, _]
 ) extends Refreshable[F, A] {
@@ -72,9 +72,9 @@ object InstrumentedRefreshable {
       metricFactory: MetricFactory[F]
   ): F[
     (
-        Counter.Labelled[F, Long, (String, CachedValue[A])],
-        Gauge.Labelled[F, Boolean, String],
-        Gauge.Labelled[F, Boolean, String]
+        Counter[F, Long, (String, CachedValue[A])],
+        Gauge[F, Boolean, String],
+        Gauge[F, Boolean, String]
     )
   ] = {
     val factory = metricFactory.withPrefix(prefix)
@@ -115,9 +115,9 @@ object InstrumentedRefreshable {
       metricFactory: MetricFactory[F]
   ): F[
     (
-        Counter.Labelled[F, Long, String],
-        Gauge.Labelled[F, Boolean, String],
-        Counter.Labelled[F, Long, String]
+        Counter[F, Long, String],
+        Gauge[F, Boolean, String],
+        Counter[F, Long, String]
     )
   ] = {
     val factory = metricFactory.withPrefix(prefix)
@@ -178,9 +178,9 @@ object InstrumentedRefreshable {
       currentOnExhaustedRetries: PartialFunction[Throwable, F[Unit]]
   ): F[
     (
-        Counter.Labelled[F, Long, (String, CachedValue[A])],
-        Gauge.Labelled[F, Boolean, String],
-        Gauge.Labelled[F, Boolean, String],
+        Counter[F, Long, (String, CachedValue[A])],
+        Gauge[F, Boolean, String],
+        Gauge[F, Boolean, String],
         (A, FiniteDuration) => F[Unit],
         PartialFunction[(Throwable, RetryDetails), F[Unit]],
         PartialFunction[Throwable, F[Unit]]
