@@ -1,0 +1,3 @@
+package prometheus4cats
+
+package object trace4cats extends Trace4CatsExemplarInstances
