@@ -25,7 +25,7 @@ import cats.syntax.flatMap._
 import cats.syntax.unorderedFoldable._
 // TODO remove once upstream fixed
 import prometheus4cats.Exemplar.Implicits.noop
-import prometheus4cats.{Label, MetricFactory}
+import prometheus4cats.{Label, MetricFactory, neq}
 import trace4cats.model.Batch
 
 object InstrumentedSpanExporter {
