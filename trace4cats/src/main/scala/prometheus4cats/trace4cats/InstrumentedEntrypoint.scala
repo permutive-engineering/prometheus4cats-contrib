@@ -17,7 +17,7 @@
 package prometheus4cats.trace4cats
 
 import cats.effect.kernel.Resource
-import prometheus4cats.{MetricFactory, neq}
+import prometheus4cats.{MetricFactory}
 import trace4cats._
 
 object InstrumentedEntrypoint {
