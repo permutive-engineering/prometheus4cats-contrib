@@ -44,8 +44,8 @@ final class Trace4CatsExemplar[F[_]: Functor: Trace.WithContext](
 }
 
 object Trace4CatsExemplar extends Trace4CatsExemplarInstances {
-  val DefaultTraceIdLabelName = Exemplar.LabelName("trace_id")
-  val DefaultSpanIdLabelName = Exemplar.LabelName("span_id")
+  val DefaultTraceIdLabelName = Exemplar.LabelName("TraceID")
+  val DefaultSpanIdLabelName = Exemplar.LabelName("SpanID")
 
   def apply[F[_]: Functor: Trace.WithContext](
       traceIdLabelName: Exemplar.LabelName = DefaultTraceIdLabelName,
