@@ -141,7 +141,7 @@ object Trace4CatsExemplarSampler extends Trace4CatsExemplarSamplerInstances {
   // because it is unlikely that retention happens at the exact same time as a Prometheus scrape.
   val DefaultMinRetentionInterval: FiniteDuration = 7109.millis
 
-  def apply[F[_]: FlatMap: Clock: Trace.WithContext, A](
+  def default[F[_]: FlatMap: Clock: Trace.WithContext, A](
       minRetentionInterval: FiniteDuration = DefaultMinRetentionInterval,
       traceIdLabelName: Exemplar.LabelName = DefaultTraceIdLabelName,
       spanIdLabelName: Exemplar.LabelName = DefaultSpanIdLabelName
@@ -157,5 +157,5 @@ trait Trace4CatsExemplarSamplerInstances {
   implicit def trace4CatsExemplarSamplerInstance[F[
       _
   ]: FlatMap: Clock: Trace.WithContext, A]: Trace4CatsExemplarSampler[F, A] =
-    Trace4CatsExemplarSampler[F, A]()
+    Trace4CatsExemplarSampler.default[F, A]()
 }
