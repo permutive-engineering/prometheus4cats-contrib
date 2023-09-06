@@ -72,8 +72,8 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
   }
 
   final def consumerResource[K, V](implicit
-      kd: RecordDeserializer[IO, K],
-      vd: RecordDeserializer[IO, V]
+      kd: KeyDeserializer[IO, K],
+      vd: ValueDeserializer[IO, V]
   ): Resource[IO, KafkaConsumer[IO, K, V]] =
     KafkaConsumer
       .resource(
@@ -84,16 +84,16 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
       )
 
   final def producerResource[K, V](implicit
-      k: RecordSerializer[IO, K],
-      v: RecordSerializer[IO, V]
+      k: KeySerializer[IO, K],
+      v: ValueSerializer[IO, V]
   ): Resource[IO, KafkaProducer.Metrics[IO, K, V]] =
     KafkaProducer.resource(
       ProducerSettings[IO, K, V].withProperties(defaultProducerConfig)
     )
 
   final def transactionalProducerResource[K, V](implicit
-      k: RecordSerializer[IO, K],
-      v: RecordSerializer[IO, V]
+      k: KeySerializer[IO, K],
+      v: ValueSerializer[IO, V]
   ): Resource[IO, TransactionalKafkaProducer.WithoutOffsets[IO, K, V]] =
     TransactionalKafkaProducer.resource(
       TransactionalProducerSettings[IO, K, V](
