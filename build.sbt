@@ -20,7 +20,7 @@ val Scala213 = "2.13.10"
 ThisBuild / crossScalaVersions := Seq("2.12.17", Scala213, "3.3.0")
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
-val Prometheus4Cats = "2.0.0-RC2"
+val Prometheus4Cats = "2.0.0"
 
 val CollectionCompat = "2.9.0"
 
