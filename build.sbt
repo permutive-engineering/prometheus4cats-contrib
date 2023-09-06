@@ -40,7 +40,7 @@ lazy val catsEffect = project
     name := "prometheus4cats-contrib-cats-effect",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "org.typelevel" %% "cats-effect" % "3.4.5"
+      "org.typelevel" %% "cats-effect" % "3.4.8"
     ),
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
@@ -56,7 +56,7 @@ lazy val trace4Cats = project
     name := "prometheus4cats-contrib-trace4cats",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "io.janstenpickle" %% "trace4cats-core" % "0.14.1"
+      "io.janstenpickle" %% "trace4cats-core" % "0.14.2"
     )
   )
 
@@ -76,7 +76,7 @@ lazy val googleCloudBigtable = project
     name := "prometheus4cats-contrib-google-cloud-bigtable",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.google.cloud" % "google-cloud-bigtable" % "2.18.3",
+      "com.google.cloud" % "google-cloud-bigtable" % "2.20.0",
       "org.scalameta" %%% "munit" % "0.7.29" % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
       "org.typelevel" %%% "cats-effect-testkit" % "3.4.5" % Test,
