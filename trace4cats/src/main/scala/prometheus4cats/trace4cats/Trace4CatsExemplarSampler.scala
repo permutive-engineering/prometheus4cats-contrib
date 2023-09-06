@@ -132,7 +132,6 @@ object Trace4CatsExemplarSampler extends Trace4CatsExemplarSamplerInstances {
           .filter(
             _.timestamp.toEpochMilli - prev.timestamp.toEpochMilli > minRetentionIntervalMs
           )
-          .orElse(previous)
       case None => next
     }
   }
