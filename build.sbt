@@ -56,7 +56,7 @@ lazy val trace4Cats = project
     name := "prometheus4cats-contrib-trace4cats",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "io.janstenpickle" %% "trace4cats-core" % "0.14.2"
+      "io.janstenpickle" %% "trace4cats-core" % "0.14.5"
     )
   )
 
