@@ -108,7 +108,7 @@ lazy val fs2Kafka = project
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "com.github.fd4s" %% "fs2-kafka" % "3.0.1",
-      "com.dimafeng" %% "testcontainers-scala-munit" % "0.40.12" % Test,
+      "com.dimafeng" %% "testcontainers-scala-munit" % "0.40.17" % Test,
       "com.dimafeng" %% "testcontainers-scala-kafka" % "0.40.17" % Test,
       "com.permutive" %% "prometheus4cats-java" % Prometheus4Cats % Test,
       "ch.qos.logback" % "logback-classic" % "1.2.11" % Test, // scala-steward:off
