@@ -16,13 +16,13 @@ ThisBuild / tlSonatypeUseLegacyHost := true
 // publish website from this branch
 ThisBuild / tlSitePublishBranch := Some("main")
 
-val Scala213 = "2.13.10"
-ThisBuild / crossScalaVersions := Seq("2.12.17", Scala213, "3.3.0")
+val Scala213 = "2.13.11"
+ThisBuild / crossScalaVersions := Seq("2.12.18", Scala213, "3.3.0")
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Prometheus4Cats = "2.0.0"
 
-val CollectionCompat = "2.9.0"
+val CollectionCompat = "2.11.0"
 
 lazy val root =
   tlCrossRootProject.aggregate(
@@ -40,7 +40,7 @@ lazy val catsEffect = project
     name := "prometheus4cats-contrib-cats-effect",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "org.typelevel" %% "cats-effect" % "3.4.8"
+      "org.typelevel" %% "cats-effect" % "3.4.11"
     ),
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
@@ -56,7 +56,7 @@ lazy val trace4Cats = project
     name := "prometheus4cats-contrib-trace4cats",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "io.janstenpickle" %% "trace4cats-core" % "0.14.2"
+      "io.janstenpickle" %% "trace4cats-core" % "0.14.5"
     )
   )
 
@@ -76,11 +76,11 @@ lazy val googleCloudBigtable = project
     name := "prometheus4cats-contrib-google-cloud-bigtable",
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.google.cloud" % "google-cloud-bigtable" % "2.20.0",
+      "com.google.cloud" % "google-cloud-bigtable" % "2.20.4",
       "org.scalameta" %%% "munit" % "0.7.29" % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
-      "org.typelevel" %%% "cats-effect-testkit" % "3.4.5" % Test,
-      "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.155.3" % Test
+      "org.typelevel" %%% "cats-effect-testkit" % "3.4.11" % Test,
+      "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.155.4" % Test
     )
   )
   .dependsOn(opencensus)
@@ -108,13 +108,13 @@ lazy val fs2Kafka = project
     libraryDependencies ++= Seq(
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "com.github.fd4s" %% "fs2-kafka" % "3.0.1",
-      "com.dimafeng" %% "testcontainers-scala-munit" % "0.40.12" % Test,
-      "com.dimafeng" %% "testcontainers-scala-kafka" % "0.40.12" % Test,
+      "com.dimafeng" %% "testcontainers-scala-munit" % "0.40.17" % Test,
+      "com.dimafeng" %% "testcontainers-scala-kafka" % "0.40.17" % Test,
       "com.permutive" %% "prometheus4cats-java" % Prometheus4Cats % Test,
       "ch.qos.logback" % "logback-classic" % "1.2.11" % Test, // scala-steward:off
       "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
-      "org.typelevel" %% "cats-effect-testkit" % "3.4.5" % Test,
-      "org.typelevel" %% "log4cats-slf4j" % "2.5.0" % Test
+      "org.typelevel" %% "cats-effect-testkit" % "3.4.11" % Test,
+      "org.typelevel" %% "log4cats-slf4j" % "2.6.0" % Test
     ),
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
