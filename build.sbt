@@ -79,7 +79,7 @@ lazy val googleCloudBigtable = project
       "com.google.cloud" % "google-cloud-bigtable" % "2.20.4",
       "org.scalameta" %%% "munit" % "0.7.29" % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
-      "org.typelevel" %%% "cats-effect-testkit" % "3.4.5" % Test,
+      "org.typelevel" %%% "cats-effect-testkit" % "3.4.11" % Test,
       "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.155.4" % Test
     )
   )
@@ -113,7 +113,7 @@ lazy val fs2Kafka = project
       "com.permutive" %% "prometheus4cats-java" % Prometheus4Cats % Test,
       "ch.qos.logback" % "logback-classic" % "1.2.11" % Test, // scala-steward:off
       "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
-      "org.typelevel" %% "cats-effect-testkit" % "3.4.5" % Test,
+      "org.typelevel" %% "cats-effect-testkit" % "3.4.11" % Test,
       "org.typelevel" %% "log4cats-slf4j" % "2.5.0" % Test
     ),
     libraryDependencies ++= PartialFunction
