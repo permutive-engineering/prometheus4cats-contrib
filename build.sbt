@@ -17,7 +17,7 @@ ThisBuild / tlSonatypeUseLegacyHost := true
 ThisBuild / tlSitePublishBranch := Some("main")
 
 val Scala213 = "2.13.13"
-ThisBuild / crossScalaVersions := Seq("2.12.19", Scala213, "3.3.0")
+ThisBuild / crossScalaVersions := Seq("2.12.19", Scala213, "3.3.3")
 ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Prometheus4Cats = "2.0.0"
