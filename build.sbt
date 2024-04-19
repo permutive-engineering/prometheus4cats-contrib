@@ -22,7 +22,7 @@ ThisBuild / scalaVersion := Scala213 // the default Scala
 
 val Prometheus4Cats = "2.0.0"
 
-val CollectionCompat = "2.9.0"
+val CollectionCompat = "2.12.0"
 
 lazy val root =
   tlCrossRootProject.aggregate(
