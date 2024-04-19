@@ -13,8 +13,7 @@ ThisBuild / developers := List(
 // publish to s01.oss.sonatype.org (set to true to publish to oss.sonatype.org instead)
 ThisBuild / tlSonatypeUseLegacyHost := true
 
-// publish website from this branch
-ThisBuild / tlSitePublishBranch := Some("main")
+ThisBuild / tlCiDependencyGraphJob := false
 
 val Scala213 = "2.13.13"
 ThisBuild / crossScalaVersions := Seq("2.12.19", Scala213, "3.3.3")
@@ -123,5 +122,3 @@ lazy val fs2Kafka = project
       }
       .toList
   )
-
-lazy val docs = project.in(file("site")).enablePlugins(TypelevelSitePlugin)
