@@ -79,7 +79,7 @@ lazy val googleCloudBigtable = project
       "org.scalameta" %%% "munit" % "0.7.29" % Test,
       "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
       "org.typelevel" %%% "cats-effect-testkit" % "3.4.11" % Test,
-      "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.155.4" % Test
+      "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.179.0" % Test
     )
   )
   .dependsOn(opencensus)
