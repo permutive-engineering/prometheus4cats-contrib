@@ -113,7 +113,7 @@ lazy val fs2Kafka = project
       "ch.qos.logback" % "logback-classic" % "1.2.11" % Test, // scala-steward:off
       "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
       "org.typelevel" %% "cats-effect-testkit" % "3.5.4" % Test,
-      "org.typelevel" %% "log4cats-slf4j" % "2.6.0" % Test
+      "org.typelevel" %% "log4cats-slf4j" % "2.7.0" % Test
     ),
     libraryDependencies ++= PartialFunction
       .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
