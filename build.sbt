@@ -77,7 +77,7 @@ lazy val googleCloudBigtable = project
       "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
       "com.google.cloud" % "google-cloud-bigtable" % "2.42.0",
       "org.scalameta" %%% "munit" % "1.0.1" % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
+      "org.typelevel" %%% "munit-cats-effect" % "2.0.0" % Test,
       "org.typelevel" %%% "cats-effect-testkit" % "3.5.4" % Test,
       "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.179.0" % Test
     )
@@ -111,7 +111,7 @@ lazy val fs2Kafka = project
       "com.dimafeng" %% "testcontainers-scala-kafka" % "0.40.14" % Test,
       "com.permutive" %% "prometheus4cats-java" % Prometheus4Cats % Test,
       "ch.qos.logback" % "logback-classic" % "1.2.11" % Test, // scala-steward:off
-      "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
+      "org.typelevel" %% "munit-cats-effect" % "2.0.0" % Test,
       "org.typelevel" %% "cats-effect-testkit" % "3.5.4" % Test,
       "org.typelevel" %% "log4cats-slf4j" % "2.7.0" % Test
     ),
