@@ -1,5 +1,5 @@
 // https://typelevel.org/sbt-typelevel/faq.html#what-is-a-base-version-anyway
-ThisBuild / tlBaseVersion := "2.1" // your current series x.y
+ThisBuild / tlBaseVersion := "2.3" // your current series x.y
 
 ThisBuild / organization := "com.permutive"
 ThisBuild / organizationName := "Permutive"
@@ -34,7 +34,7 @@ lazy val root =
   )
 
 lazy val catsEffect = project
-  .in(file("cats-effect"))
+  .in(file("modules") / "prometheus4cats-contrib-cats-effect")
   .settings(
     name := "prometheus4cats-contrib-cats-effect",
     libraryDependencies ++= Seq(
@@ -50,7 +50,7 @@ lazy val catsEffect = project
   )
 
 lazy val trace4Cats = project
-  .in(file("trace4cats"))
+  .in(file("modules") / "prometheus4cats-contrib-trace4cats")
   .settings(
     name := "prometheus4cats-contrib-trace4cats",
     libraryDependencies ++= Seq(
@@ -60,7 +60,7 @@ lazy val trace4Cats = project
   )
 
 lazy val refreshable = project
-  .in(file("refreshable"))
+  .in(file("modules") / "prometheus4cats-contrib-refreshable")
   .settings(
     name := "prometheus4cats-contrib-refreshable",
     libraryDependencies ++= Seq(
@@ -70,7 +70,7 @@ lazy val refreshable = project
   )
 
 lazy val googleCloudBigtable = project
-  .in(file("bigtable"))
+  .in(file("modules") / "prometheus4cats-contrib-google-cloud-bigtable")
   .settings(
     name := "prometheus4cats-contrib-google-cloud-bigtable",
     libraryDependencies ++= Seq(
@@ -85,7 +85,7 @@ lazy val googleCloudBigtable = project
   .dependsOn(opencensus)
 
 lazy val opencensus = project
-  .in(file("opencensus"))
+  .in(file("modules") / "prometheus4cats-contrib-opencensus")
   .settings(
     name := "prometheus4cats-contrib-opencensus",
     libraryDependencies ++= Seq(
@@ -101,7 +101,7 @@ lazy val opencensus = project
   )
 
 lazy val fs2Kafka = project
-  .in(file("fs2-kafka"))
+  .in(file("modules") / "prometheus4cats-contrib-fs2-kafka")
   .settings(
     name := "prometheus4cats-contrib-fs2-kafka",
     libraryDependencies ++= Seq(
