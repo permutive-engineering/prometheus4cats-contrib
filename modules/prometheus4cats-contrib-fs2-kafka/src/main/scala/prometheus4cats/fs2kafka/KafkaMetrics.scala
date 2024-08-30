@@ -16,55 +16,71 @@
 
 package prometheus4cats.fs2kafka
 
-import cats.effect.kernel.{Resource, Sync}
-import cats.syntax.either._
-import cats.syntax.flatMap._
-import fs2.kafka.{KafkaConsumer, KafkaProducer, TransactionalKafkaProducer}
-import org.apache.kafka.common.{MetricName, Metric => KafkaMetric}
-import prometheus4cats._
-
-import scala.collection.immutable.{Map, Set}
+import scala.collection.immutable.Map
+import scala.collection.immutable.Set
 import scala.jdk.CollectionConverters._
 
+import cats.effect.kernel.Resource
+import cats.effect.kernel.Sync
+import cats.syntax.all._
+
+import fs2.kafka.KafkaConsumer
+import fs2.kafka.KafkaProducer
+import fs2.kafka.TransactionalKafkaProducer
+import org.apache.kafka.common.MetricName
+import org.apache.kafka.common.{Metric => KafkaMetric}
+import prometheus4cats._
+
 object KafkaMetrics {
+
   sealed trait ParseError extends Any {
+
     def metricName: String
+
     def labelValue: String
+
   }
+
   object ParseError {
-    case class InvalidName(metricName: String) extends AnyVal with ParseError {
+
+    final case class InvalidName(metricName: String) extends AnyVal with ParseError {
+
       override def labelValue: String = "invalid_name"
+
     }
-    case class InvalidMetric(metricName: String)
-        extends AnyVal
-        with ParseError {
+
+    final case class InvalidMetric(metricName: String) extends AnyVal with ParseError {
+
       override def labelValue: String = "invalid_metric_type"
+
     }
-    case class InvalidLabels(metricName: String)
-        extends AnyVal
-        with ParseError {
+
+    final case class InvalidLabels(metricName: String) extends AnyVal with ParseError {
+
       override def labelValue: String = "invalid_label_names"
+
     }
+
   }
 
-  final private val parseErrorGaugeName: Gauge.Name = "metric_parse_error"
+  private val parseErrorGaugeName: Gauge.Name = "metric_parse_error"
 
-  final private val parseErrorHelp: Metric.Help =
+  private val parseErrorHelp: Metric.Help =
     "Kafka metrics that have been excluded due to invalid strings"
 
-  final private val parseErrorTypeLabel: Label.Name = "parse_error_type"
+  private val parseErrorTypeLabel: Label.Name = "parse_error_type"
 
-  final private val parseErrorMetricNameLabel: Label.Name = "metric_name"
+  private val parseErrorMetricNameLabel: Label.Name = "metric_name"
 
-  final private val metricsPrefix: Metric.Prefix = "kafka_client"
+  private val metricsPrefix: Metric.Prefix = "kafka_client"
 
-  final private val consumerGroupLabel: Label.Name = "consumer_group"
+  private val consumerGroupLabel: Label.Name = "consumer_group"
 
-  final private val producerNameLabel: Label.Name = "producer_name"
+  private val producerNameLabel: Label.Name = "producer_name"
 
-  final private val transactionalProducerLabel: Label.Name = "is_transactional"
+  private val transactionalProducerLabel: Label.Name = "is_transactional"
 
-  final private val tagFilter: Set[String] = Set("client-id")
+  private val tagFilter: Set[String] = Set("client-id")
 
   private def transformMetrics[F[_]: Sync](
       extraLabels: Map[Label.Name, String],
@@ -79,13 +95,12 @@ object KafkaMetrics {
         metricName: MetricName,
         labels: Map[String, String]
     ): Either[ParseError, Map[Label.Name, String]] =
-      Either
-        .catchNonFatal {
-          labels.flatMap { case (key, value) =>
-            if (tagFilter.contains(key)) None
-            else Some(Label.Name.unsafeFrom(key.replace('-', '_')) -> value)
-          } + (Label.Name("metric_group") -> metricName.group())
-        }
+      Either.catchNonFatal {
+        labels.flatMap { case (key, value) =>
+          if (tagFilter.contains(key)) None
+          else Some(Label.Name.unsafeFrom(key.replace('-', '_')) -> value)
+        } + (Label.Name("metric_group") -> metricName.group())
+      }
         .leftMap(_ => ParseError.InvalidLabels(metricName.name()))
 
     /*
@@ -178,7 +193,7 @@ object KafkaMetrics {
             Map[String, Map[MetricName, (KafkaMetric, Map[String, String])]]
           ](Map.empty) { case (acc, (name, metric)) =>
             val transformedName = transformName(name)
-            val labels = name.tags().asScala.toMap
+            val labels          = name.tags().asScala.toMap
 
             acc.get(transformedName) match {
               case Some(metrics) =>
@@ -201,26 +216,25 @@ object KafkaMetrics {
         val (metricCollection, errors) = aligned.foldLeft(
           (MetricCollection.empty, List.empty[ParseError])
         ) { case ((col, parseErrors), (metricName, metrics)) =>
-          metrics.foldLeft((col, parseErrors)) {
-            case ((col, parseErrors), (name, (metric, labels))) =>
-              val newCol = for {
-                transformedLabels <- transformLabels(name, labels)
-                allLabels = transformedLabels ++ extraLabels
-                help = prometheus4cats.Metric.Help
-                  .from(name.description())
-                  .getOrElse(
-                    prometheus4cats.Metric.Help("Metric from kafka")
-                  )
-                newCol <-
-                  if (metricName.endsWith("_total"))
-                    createCounter(metricName, help, allLabels, metric, col)
-                  else createGauge(metricName, help, allLabels, metric, col)
-              } yield newCol
+          metrics.foldLeft((col, parseErrors)) { case ((col, parseErrors), (name, (metric, labels))) =>
+            val newCol = for {
+              transformedLabels <- transformLabels(name, labels)
+              allLabels          = transformedLabels ++ extraLabels
+              help = prometheus4cats.Metric.Help
+                       .from(name.description())
+                       .getOrElse(
+                         prometheus4cats.Metric.Help("Metric from kafka")
+                       )
+              newCol <-
+                if (metricName.endsWith("_total"))
+                  createCounter(metricName, help, allLabels, metric, col)
+                else createGauge(metricName, help, allLabels, metric, col)
+            } yield newCol
 
-              newCol.fold(
-                err => (col, err :: parseErrors),
-                (_, parseErrors)
-              )
+            newCol.fold(
+              err => (col, err :: parseErrors),
+              (_, parseErrors)
+            )
 
           }
 
@@ -275,8 +289,8 @@ object KafkaMetrics {
     .metricCollectionCallback(
       transformMetrics(
         Map(
-          producerNameLabel -> producerName,
-          transactionalProducerLabel -> false.toString
+          producerNameLabel          -> producerName,
+          transactionalProducerLabel -> "false"
         ),
         producer.metrics
       )
@@ -292,11 +306,12 @@ object KafkaMetrics {
     .metricCollectionCallback(
       transformMetrics(
         Map(
-          producerNameLabel -> producerName,
-          transactionalProducerLabel -> true.toString
+          producerNameLabel          -> producerName,
+          transactionalProducerLabel -> "true"
         ),
         producer.metrics
       )
     )
     .build
+
 }

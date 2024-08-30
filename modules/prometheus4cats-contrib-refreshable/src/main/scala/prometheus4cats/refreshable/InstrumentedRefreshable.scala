@@ -16,21 +16,25 @@
 
 package prometheus4cats.refreshable
 
+import scala.concurrent.duration.FiniteDuration
+
+import cats.Applicative
+import cats.Functor
 import cats.data.NonEmptyList
-import cats.{Applicative, Functor}
+import cats.effect.kernel.Async
+import cats.effect.kernel.MonadCancel
+import cats.effect.kernel.MonadCancelThrow
+import cats.effect.kernel.Poll
+import cats.effect.kernel.Resource
 import cats.effect.kernel.syntax.monadCancel._
 import cats.effect.kernel.syntax.resource._
 import cats.effect.kernel.syntax.spawn._
-import cats.effect.kernel.{Async, MonadCancel, MonadCancelThrow, Poll, Resource}
-import cats.syntax.apply._
-import cats.syntax.flatMap._
-import cats.syntax.foldable._
-import cats.syntax.functor._
-import com.permutive.refreshable.{CachedValue, Refreshable}
+import cats.syntax.all._
+
+import com.permutive.refreshable.CachedValue
+import com.permutive.refreshable.Refreshable
 import prometheus4cats._
 import retry.RetryDetails
-
-import scala.concurrent.duration.FiniteDuration
 
 class InstrumentedRefreshable[F[_], A] private (
     underlying: Refreshable[F, A],
@@ -41,6 +45,7 @@ class InstrumentedRefreshable[F[_], A] private (
 )(implicit
     F: MonadCancel[F, _]
 ) extends Refreshable[F, A] {
+
   override def get: F[CachedValue[A]] = F.uncancelable { poll =>
     poll(underlying.get).flatTap(value => readCounter.inc(name -> value))
   }
@@ -62,10 +67,13 @@ class InstrumentedRefreshable[F[_], A] private (
     )
 
   }
+
 }
 
 object InstrumentedRefreshable {
+
   private val prefix: Metric.Prefix = "refreshable"
+
   private val refreshableLabelName: Label.Name = "refreshable_name"
 
   private def instanceMetrics[F[_]: MonadCancelThrow, A](
@@ -164,7 +172,7 @@ object InstrumentedRefreshable {
           case CachedValue.Cancelled(_) => "cancelled"
         }
       )
-      .callback(refreshable.get.map { v => NonEmptyList.one((1L, (name, v))) })
+      .callback(refreshable.get.map(v => NonEmptyList.one((1L, (name, v)))))
       .build
 
   private def metrics[F[_]: MonadCancelThrow, A](
@@ -187,59 +195,52 @@ object InstrumentedRefreshable {
     )
   ] = {
 
-    (instanceMetrics[F, A](metricFactory), callbackMetrics(metricFactory))
-      .mapN {
-        case (
-              (readCounter, runningGauge, exhaustedRetriesGauge),
-              (
-                refreshSuccessCounter,
-                currentlyFailingGauge,
-                refreshFailureCounter
-              )
-            ) =>
-          val onNewValue: (A, FiniteDuration) => F[Unit] =
-            (a, nextRefresh) =>
-              currentOnNewValue
-                .fold(Applicative[F].unit)(_(a, nextRefresh))
-                .guarantee(
-                  refreshSuccessCounter
-                    .inc(name) >> currentlyFailingGauge
-                    .set(false, name)
-                )
-
-          val onRefreshFailure: PartialFunction[(Throwable, RetryDetails), F[
-            Unit
-          ]] = { case err =>
-            currentOnRefreshFailure
-              .lift(err)
-              .sequence_
+    (instanceMetrics[F, A](metricFactory), callbackMetrics(metricFactory)).mapN {
+      case (
+            (readCounter, runningGauge, exhaustedRetriesGauge),
+            (
+              refreshSuccessCounter,
+              currentlyFailingGauge,
+              refreshFailureCounter
+            )
+          ) =>
+        val onNewValue: (A, FiniteDuration) => F[Unit] =
+          (a, nextRefresh) =>
+            currentOnNewValue
+              .fold(Applicative[F].unit)(_(a, nextRefresh))
               .guarantee(
-                refreshFailureCounter
+                refreshSuccessCounter
                   .inc(name) >> currentlyFailingGauge
-                  .set(true, name)
+                  .set(false, name)
               )
-          }
 
-          val onExhaustedRetries: PartialFunction[Throwable, F[Unit]] = {
-            case err =>
-              currentOnExhaustedRetries
-                .lift(err)
-                .sequence_
-                .guarantee(
-                  exhaustedRetriesGauge.set(true, name) >> runningGauge
-                    .set(false, name)
-                )
-          }
+        val onRefreshFailure: PartialFunction[(Throwable, RetryDetails), F[
+          Unit
+        ]] = { case err =>
+          currentOnRefreshFailure
+            .lift(err)
+            .sequence_
+            .guarantee(
+              refreshFailureCounter
+                .inc(name) >> currentlyFailingGauge
+                .set(true, name)
+            )
+        }
 
-          (
-            readCounter,
-            runningGauge,
-            exhaustedRetriesGauge,
-            onNewValue,
-            onRefreshFailure,
-            onExhaustedRetries
-          )
-      }
+        val onExhaustedRetries: PartialFunction[Throwable, F[Unit]] = { case err =>
+          currentOnExhaustedRetries
+            .lift(err)
+            .sequence_
+            .guarantee(
+              exhaustedRetriesGauge.set(true, name) >> runningGauge
+                .set(false, name)
+            )
+        }
+
+        (
+          readCounter, runningGauge, exhaustedRetriesGauge, onNewValue, onRefreshFailure, onExhaustedRetries
+        )
+    }
   }
 
   def create[F[_]: MonadCancelThrow, A](
@@ -253,12 +254,7 @@ object InstrumentedRefreshable {
       builder.exhaustedRetriesCallback
     ).toResource.flatMap {
       case (
-            readCounter,
-            runningGauge,
-            exhaustedRetriesGauge,
-            onNewValue,
-            onRefreshFailure,
-            onExhaustedRetries
+            readCounter, runningGauge, exhaustedRetriesGauge, onNewValue, onRefreshFailure, onExhaustedRetries
           ) =>
         builder
           .onNewValue(onNewValue)
@@ -269,11 +265,7 @@ object InstrumentedRefreshable {
           .flatTap(callback(name, _, metricFactory))
           .map { refreshable =>
             new InstrumentedRefreshable[F, A](
-              refreshable,
-              name,
-              readCounter,
-              runningGauge,
-              exhaustedRetriesGauge
+              refreshable, name, readCounter, runningGauge, exhaustedRetriesGauge
             )
           }
     }
@@ -286,49 +278,40 @@ object InstrumentedRefreshable {
     (
       instanceMetrics[F, A](metricFactory).toResource,
       callbackMetrics(metricFactory).toResource
-    )
-      .flatMapN {
-        case (
-              (readCounter, runningGauge, exhaustedRetriesGauge),
-              (
-                refreshSuccessCounter,
-                currentlyFailingGauge,
+    ).flatMapN {
+      case (
+            (readCounter, runningGauge, exhaustedRetriesGauge),
+            (
+              refreshSuccessCounter,
+              currentlyFailingGauge,
+              refreshFailureCounter
+            )
+          ) =>
+        callback(name, refreshable, metricFactory) >> Resource
+          .uncancelable((_: Poll[Resource[F, *]]) =>
+            Resource.make(runningGauge.set(true, name))(_ =>
+              runningGauge.set(false, name)
+            ) >> refreshable.updates.evalMap {
+              case CachedValue.Success(_) =>
+                refreshSuccessCounter
+                  .inc(name) >> currentlyFailingGauge.set(
+                  false,
+                  name
+                ) >> runningGauge.set(true, name)
+              case CachedValue.Error(_, _) =>
                 refreshFailureCounter
-              )
-            ) =>
-          callback(name, refreshable, metricFactory) >> Resource
-            .uncancelable((_: Poll[Resource[F, *]]) =>
-              Resource.make(runningGauge.set(true, name))(_ =>
-                runningGauge.set(false, name)
-              ) >> refreshable.updates
-                .evalMap {
-                  case CachedValue.Success(_) =>
-                    refreshSuccessCounter
-                      .inc(name) >> currentlyFailingGauge.set(
-                      false,
-                      name
-                    ) >> runningGauge.set(true, name)
-                  case CachedValue.Error(_, _) =>
-                    refreshFailureCounter
-                      .inc(name) >> currentlyFailingGauge.set(
-                      true,
-                      name
-                    ) >> runningGauge.set(true, name)
-                  case CachedValue.Cancelled(_) => runningGauge.set(false, name)
-                }
-                .compile
-                .drain
-                .background
+                  .inc(name) >> currentlyFailingGauge.set(
+                  true,
+                  name
+                ) >> runningGauge.set(true, name)
+              case CachedValue.Cancelled(_) => runningGauge.set(false, name)
+            }.compile.drain.background
+          )
+          .as(
+            new InstrumentedRefreshable[F, A](
+              refreshable, name, readCounter, runningGauge, exhaustedRetriesGauge
             )
-            .as(
-              new InstrumentedRefreshable[F, A](
-                refreshable,
-                name,
-                readCounter,
-                runningGauge,
-                exhaustedRetriesGauge
-              )
-            )
-      }
+          )
+    }
 
 }

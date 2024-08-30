@@ -17,17 +17,18 @@
 package prometheus4cats.trace4cats
 
 import cats.Functor
+import cats.syntax.all._
+
 import prometheus4cats.Exemplar
-import trace4cats.Trace
-import cats.syntax.functor._
-import cats.syntax.show._
 import prometheus4cats.trace4cats.Trace4CatsExemplar._
+import trace4cats.Trace
 import trace4cats.model.SampleDecision
 
 final class Trace4CatsExemplar[F[_]: Functor: Trace.WithContext](
     traceIdLabelName: Exemplar.LabelName,
     spanIdLabelName: Exemplar.LabelName
 ) extends Exemplar[F] {
+
   override def get: F[Option[Exemplar.Labels]] =
     Trace.WithContext[F].context.map { traceContext =>
       traceContext.traceFlags.sampled match {
@@ -36,14 +37,16 @@ final class Trace4CatsExemplar[F[_]: Functor: Trace.WithContext](
           Exemplar.Labels
             .of(
               traceIdLabelName -> traceContext.traceId.show,
-              spanIdLabelName -> traceContext.spanId.show
+              spanIdLabelName  -> traceContext.spanId.show
             )
             .toOption
       }
     }
+
 }
 
 object Trace4CatsExemplar extends Trace4CatsExemplarInstances {
+
   def apply[F[_]: Functor: Trace.WithContext](
       traceIdLabelName: Exemplar.LabelName = DefaultTraceIdLabelName,
       spanIdLabelName: Exemplar.LabelName = DefaultSpanIdLabelName
@@ -53,6 +56,7 @@ object Trace4CatsExemplar extends Trace4CatsExemplarInstances {
 }
 
 trait Trace4CatsExemplarInstances {
-  implicit def trace4catsExemplarInstance[F[_]: Functor: Trace.WithContext]
-      : Trace4CatsExemplar[F] = apply()
+
+  implicit def trace4catsExemplarInstance[F[_]: Functor: Trace.WithContext]: Trace4CatsExemplar[F] = apply()
+
 }

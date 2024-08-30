@@ -16,12 +16,16 @@
 
 package prometheus4cats.bigtable
 
-import cats.effect.kernel.{Resource, Sync}
+import cats.effect.kernel.Resource
+import cats.effect.kernel.Sync
+
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings
-import prometheus4cats.{MetricCollection, MetricFactory}
+import prometheus4cats.MetricCollection
+import prometheus4cats.MetricFactory
 import prometheus4cats.opencensus.OpenCensusUtils
 
 object BigtableOpenCensusMetrics {
+
   private[bigtable] val openCensusPrefix = "cloud.google.com/java/bigtable/"
 
   private[bigtable] def metricCollection[F[_]: Sync]: F[MetricCollection] =
@@ -45,4 +49,5 @@ object BigtableOpenCensusMetrics {
       .metricCollectionCallback(metricCollection)
       .build
       .evalMap(_ => enableClientMetrics)
+
 }

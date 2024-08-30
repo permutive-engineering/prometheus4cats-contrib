@@ -16,28 +16,27 @@
 
 package prometheus4cats.bigtable
 
+import scala.jdk.CollectionConverters._
+
 import cats.data.NonEmptySeq
-import cats.effect.syntax.resource._
-import cats.effect.{IO, Resource}
-import cats.syntax.flatMap._
+import cats.effect.IO
+import cats.effect.Resource
+import cats.syntax.all._
+
+import com.google.cloud.bigtable.admin.v2.BigtableTableAdminClient
+import com.google.cloud.bigtable.admin.v2.BigtableTableAdminSettings
 import com.google.cloud.bigtable.admin.v2.models.CreateTableRequest
-import com.google.cloud.bigtable.admin.v2.{
-  BigtableTableAdminClient,
-  BigtableTableAdminSettings
-}
+import com.google.cloud.bigtable.data.v2.BigtableDataClient
+import com.google.cloud.bigtable.data.v2.BigtableDataSettings
 import com.google.cloud.bigtable.data.v2.models.RowMutation
-import com.google.cloud.bigtable.data.v2.{
-  BigtableDataClient,
-  BigtableDataSettings
-}
+import com.google.cloud.bigtable.data.v2.models.TableId
 import com.google.cloud.bigtable.emulator.v2.Emulator
 import io.opencensus.metrics.Metrics
 import munit.CatsEffectSuite
+import prometheus4cats.Label
+import prometheus4cats.MetricCollection
 import prometheus4cats.MetricCollection.Value
 import prometheus4cats.MetricCollection.Value.LongGauge
-import prometheus4cats.{Label, MetricCollection}
-
-import scala.jdk.CollectionConverters._
 
 class BigtableOpenCensusMetricsSuite extends CatsEffectSuite {
 
@@ -70,7 +69,7 @@ class BigtableOpenCensusMetricsSuite extends CatsEffectSuite {
       ) >> IO(
         dataClient.mutateRow(
           RowMutation
-            .create("test-table", "test-key")
+            .create(TableId.of("test-table"), "test-key")
             .setCell("cf", "col", "value")
         )
       )
@@ -153,8 +152,7 @@ class BigtableOpenCensusMetricsSuite extends CatsEffectSuite {
       BigtableOpenCensusMetrics.metricCollection[IO].map { collection =>
         assertEquals(
           collection.gauges.collectFirst {
-            case ((name, _), values)
-                if name.value == "prometheus4cats_opencensus_parse_errors" =>
+            case ((name, _), values) if name.value === "prometheus4cats_opencensus_parse_errors" =>
               values.map {
                 case v: LongGauge => v.value
                 case _            => 0L

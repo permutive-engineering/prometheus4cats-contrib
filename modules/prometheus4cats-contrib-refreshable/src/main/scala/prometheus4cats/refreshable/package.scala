@@ -17,7 +17,9 @@
 package prometheus4cats
 
 import cats.effect.MonadCancelThrow
-import cats.effect.kernel.{Async, Resource}
+import cats.effect.kernel.Async
+import cats.effect.kernel.Resource
+
 import com.permutive.refreshable.Refreshable
 
 package object refreshable {
@@ -25,6 +27,7 @@ package object refreshable {
   implicit class InstrumentedUpdatesBuilder[F[_], A](
       builder: Refreshable.RefreshableBuilder[F, A]
   ) {
+
     def instrumentedResource(
         name: String,
         metricFactory: MetricFactory.WithCallbacks[F]
@@ -32,11 +35,13 @@ package object refreshable {
         F: MonadCancelThrow[F]
     ): Resource[F, InstrumentedRefreshable[F, A]] =
       InstrumentedRefreshable.create(builder, name, metricFactory)
+
   }
 
   implicit class InstrumentedRefreshableUpdatesSyntax[F[_], A](
       refreshable: Refreshable[F, A]
   ) {
+
     def instrumented(
         name: String,
         metricFactory: MetricFactory.WithCallbacks[F]
@@ -48,6 +53,7 @@ package object refreshable {
         name,
         metricFactory
       )
+
   }
 
 }

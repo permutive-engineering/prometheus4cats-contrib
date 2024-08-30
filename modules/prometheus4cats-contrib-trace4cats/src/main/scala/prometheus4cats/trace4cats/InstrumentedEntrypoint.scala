@@ -17,10 +17,12 @@
 package prometheus4cats.trace4cats
 
 import cats.effect.kernel.Resource
-import prometheus4cats.{MetricFactory}
+
+import prometheus4cats.MetricFactory
 import trace4cats._
 
 object InstrumentedEntrypoint {
+
   def create[F[_]](
       factory: MetricFactory[F],
       entryPoint: EntryPoint[F]
@@ -62,4 +64,5 @@ object InstrumentedEntrypoint {
               .evalTap(span => spanCounter.inc((kind, span)))
         }
       }
+
 }

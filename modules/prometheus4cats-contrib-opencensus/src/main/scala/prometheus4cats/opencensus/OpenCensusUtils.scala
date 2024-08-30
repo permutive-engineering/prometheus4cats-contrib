@@ -16,26 +16,26 @@
 
 package prometheus4cats.opencensus
 
+import scala.jdk.CollectionConverters._
+
 import cats.data.NonEmptySeq
 import cats.effect.kernel.Sync
-import cats.syntax.functor._
-import cats.syntax.traverse._
-import io.opencensus.metrics.Metrics
-import io.opencensus.metrics.`export`.{
-  Distribution,
-  Metric,
-  MetricDescriptor,
-  Summary
-}
-import prometheus4cats._
+import cats.syntax.all._
 
-import scala.jdk.CollectionConverters._
+import io.opencensus.metrics.Metrics
+import io.opencensus.metrics.export.Distribution
+import io.opencensus.metrics.export.Metric
+import io.opencensus.metrics.export.MetricDescriptor
+import io.opencensus.metrics.export.Summary
+import prometheus4cats._
 
 // Derived from https://github.com/census-instrumentation/opencensus-java/blob/master/exporters/stats/prometheus/src/main/java/io/opencensus/exporter/stats/prometheus/PrometheusExportUtils.java#L82
 
 object OpenCensusUtils {
+
   private val parseErrorsGaugeName: Gauge.Name =
     "prometheus4cats_opencensus_parse_errors"
+
   private val parseErrorsExporterLabel: Label.Name = "exporter"
 
   private def convertMetric(
@@ -46,10 +46,10 @@ object OpenCensusUtils {
 
     def parseHelpAndLabels = for {
       help <- prometheus4cats.Metric.Help.from(
-        metric.getMetricDescriptor.getDescription
-      )
+                metric.getMetricDescriptor.getDescription
+              )
       labelNames <- metric.getMetricDescriptor.getLabelKeys.asScala.toList
-        .traverse(lk => Label.Name.from(lk.getKey))
+                      .traverse(lk => Label.Name.from(lk.getKey))
     } yield (help, labelNames.toIndexedSeq)
 
     def getValues[A](
@@ -77,7 +77,7 @@ object OpenCensusUtils {
     metric.getMetricDescriptor.getType match {
       case MetricDescriptor.Type.CUMULATIVE_INT64 =>
         for {
-          name <- Counter.Name.from(s"${name}_total")
+          name          <- Counter.Name.from(s"${name}_total")
           helpAndLabels <- parseHelpAndLabels
         } yield col.appendLongCounter(
           name,
@@ -87,7 +87,7 @@ object OpenCensusUtils {
         )
       case MetricDescriptor.Type.CUMULATIVE_DOUBLE =>
         for {
-          name <- Counter.Name.from(s"${name}_total")
+          name          <- Counter.Name.from(s"${name}_total")
           helpAndLabels <- parseHelpAndLabels
         } yield col.appendDoubleCounter(
           name,
@@ -97,7 +97,7 @@ object OpenCensusUtils {
         )
       case MetricDescriptor.Type.GAUGE_INT64 =>
         for {
-          name <- Gauge.Name.from(name)
+          name          <- Gauge.Name.from(name)
           helpAndLabels <- parseHelpAndLabels
         } yield col.appendLongGauge(
           name,
@@ -107,7 +107,7 @@ object OpenCensusUtils {
         )
       case MetricDescriptor.Type.GAUGE_DOUBLE =>
         for {
-          name <- Gauge.Name.from(name)
+          name          <- Gauge.Name.from(name)
           helpAndLabels <- parseHelpAndLabels
         } yield col.appendDoubleGauge(
           name,
@@ -115,10 +115,9 @@ object OpenCensusUtils {
           helpAndLabels._2,
           getValues(onDouble = Some(_))
         )
-      case MetricDescriptor.Type.CUMULATIVE_DISTRIBUTION |
-          MetricDescriptor.Type.GAUGE_DISTRIBUTION =>
+      case MetricDescriptor.Type.CUMULATIVE_DISTRIBUTION | MetricDescriptor.Type.GAUGE_DISTRIBUTION =>
         for {
-          name <- Histogram.Name.from(name)
+          name          <- Histogram.Name.from(name)
           helpAndLabels <- parseHelpAndLabels
         } yield {
           val values = getValues(onDistribution = { distribution =>
@@ -163,25 +162,23 @@ object OpenCensusUtils {
         }
       case MetricDescriptor.Type.SUMMARY =>
         for {
-          name <- prometheus4cats.Summary.Name.from(name)
+          name          <- prometheus4cats.Summary.Name.from(name)
           helpAndLabels <- parseHelpAndLabels
         } yield col.appendDoubleSummary(
           name,
           helpAndLabels._1,
           helpAndLabels._2,
-          getValues[prometheus4cats.Summary.Value[Double]](onSummary = {
-            summary =>
-              Some(
-                prometheus4cats.Summary
-                  .Value(
-                    summary.getCount.toDouble,
-                    summary.getSum,
-                    summary.getSnapshot.getValueAtPercentiles.asScala.map {
-                      valueAtPercentile =>
-                        valueAtPercentile.getPercentile -> valueAtPercentile.getValue
-                    }.toMap
-                  )
-              )
+          getValues[prometheus4cats.Summary.Value[Double]](onSummary = { summary =>
+            Some(
+              prometheus4cats.Summary
+                .Value(
+                  summary.getCount.toDouble,
+                  summary.getSum,
+                  summary.getSnapshot.getValueAtPercentiles.asScala.map { valueAtPercentile =>
+                    valueAtPercentile.getPercentile -> valueAtPercentile.getValue
+                  }.toMap
+                )
+            )
           })
         )
     }
@@ -210,4 +207,5 @@ object OpenCensusUtils {
         parseErrors.toLong
       )
     }
+
 }

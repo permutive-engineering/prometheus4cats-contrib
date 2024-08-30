@@ -16,24 +16,26 @@
 
 package prometheus4cats.trace4cats
 
+import scala.concurrent.duration._
+
 import cats.FlatMap
 import cats.data.NonEmptySeq
 import cats.effect.kernel.Clock
-import cats.syntax.flatMap._
-import cats.syntax.functor._
-import cats.syntax.show._
-import prometheus4cats.{Exemplar, ExemplarSampler}
+import cats.syntax.all._
+
+import prometheus4cats.Exemplar
+import prometheus4cats.ExemplarSampler
 import trace4cats.Trace
 import trace4cats.model.SampleDecision
 
-import scala.concurrent.duration._
-
+@SuppressWarnings(Array("scalafix:DisableSyntax.valInAbstract"))
 abstract class Trace4CatsExemplarSampler[F[
     _
 ]: FlatMap: Clock: Trace.WithContext, A](
     traceIdLabelName: Exemplar.LabelName,
     spanIdLabelName: Exemplar.LabelName
 ) { self: ExemplarSampler[F, A] =>
+
   protected val spanExemplarData: F[Option[Exemplar.Data]] =
     Clock[F].realTimeInstant.flatMap { currentTime =>
       Trace.WithContext[F].context.map { traceContext =>
@@ -43,16 +45,18 @@ abstract class Trace4CatsExemplarSampler[F[
             Exemplar.Labels
               .of(
                 traceIdLabelName -> traceContext.traceId.show,
-                spanIdLabelName -> traceContext.spanId.show
+                spanIdLabelName  -> traceContext.spanId.show
               )
               .toOption
               .map(labels => Exemplar.Data(labels, currentTime))
         }
       }
     }
+
 }
 
 object Trace4CatsExemplarSampler extends Trace4CatsExemplarSamplerInstances {
+
   abstract class FromTraceContext[F[_]: FlatMap: Clock: Trace.WithContext, A](
       traceIdLabelName: Exemplar.LabelName,
       spanIdLabelName: Exemplar.LabelName
@@ -93,12 +97,14 @@ object Trace4CatsExemplarSampler extends Trace4CatsExemplarSamplerInstances {
         previous: Option[Exemplar.Data]
     ): F[Option[Exemplar.Data]] =
       spanExemplarData.map(sampleImpl(value, previous, _))
+
   }
 
   abstract class Simple[F[_]: FlatMap: Clock: Trace.WithContext, A](
       traceIdLabelName: Exemplar.LabelName,
       spanIdLabelName: Exemplar.LabelName
   ) extends FromTraceContext[F, A](traceIdLabelName, spanIdLabelName) {
+
     override protected def sampleImpl(
         value: A,
         buckets: NonEmptySeq[Double],
@@ -111,6 +117,7 @@ object Trace4CatsExemplarSampler extends Trace4CatsExemplarSamplerInstances {
         previous: Option[Exemplar.Data],
         next: Option[Exemplar.Data]
     ): Option[Exemplar.Data] = sampleImpl(previous, next)
+
   }
 
   class Default[
@@ -121,6 +128,7 @@ object Trace4CatsExemplarSampler extends Trace4CatsExemplarSamplerInstances {
       traceIdLabelName: Exemplar.LabelName,
       spanIdLabelName: Exemplar.LabelName
   ) extends Simple[F, A](traceIdLabelName, spanIdLabelName) {
+
     private val minRetentionIntervalMs = minRetentionInterval.toMillis
 
     override protected def sampleImpl(
@@ -134,6 +142,7 @@ object Trace4CatsExemplarSampler extends Trace4CatsExemplarSamplerInstances {
           )
       case None => next
     }
+
   }
 
   // Choosing a prime number for the retention interval makes behavior more predictable,
@@ -150,11 +159,14 @@ object Trace4CatsExemplarSampler extends Trace4CatsExemplarSamplerInstances {
       traceIdLabelName,
       spanIdLabelName
     )
+
 }
 
 trait Trace4CatsExemplarSamplerInstances {
+
   implicit def trace4CatsExemplarSamplerInstance[F[
       _
   ]: FlatMap: Clock: Trace.WithContext, A]: Trace4CatsExemplarSampler[F, A] =
     Trace4CatsExemplarSampler.default[F, A]()
+
 }

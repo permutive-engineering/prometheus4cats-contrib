@@ -16,14 +16,18 @@
 
 package prometheus4cats.trace4cats
 
-import _root_.trace4cats.kernel.SpanCompleter
 import cats.data.NonEmptySeq
 import cats.effect.MonadCancelThrow
-import cats.effect.kernel.{Clock, Resource}
-import prometheus4cats.{Label, MetricFactory}
+import cats.effect.kernel.Clock
+import cats.effect.kernel.Resource
+
+import _root_.trace4cats.kernel.SpanCompleter
+import prometheus4cats.Label
+import prometheus4cats.MetricFactory
 import trace4cats.model.CompletedSpan
 
 object InstrumentedSpanCompleter {
+
   val DefaultTimerHistogramBuckets: NonEmptySeq[Double] =
     NonEmptySeq.of(0.1, 0.5, 1, 5, 10, 20).map(_ / 1000d)
 
@@ -39,20 +43,20 @@ object InstrumentedSpanCompleter {
 
     for {
       outcomeRecorder <- metricFactory
-        .counter("spans_total")
-        .ofLong
-        .help("Total number of spans completed")
-        .label[String](completerNameLabel)
-        .asOutcomeRecorder
-        .build
+                           .counter("spans_total")
+                           .ofLong
+                           .help("Total number of spans completed")
+                           .label[String](completerNameLabel)
+                           .asOutcomeRecorder
+                           .build
       timer <- metricFactory
-        .histogram("complete_time")
-        .ofDouble
-        .help("Time it takes to complete a span in seconds")
-        .buckets(timerHistogramBuckets)
-        .label[String](completerNameLabel)
-        .asTimer
-        .build
+                 .histogram("complete_time")
+                 .ofDouble
+                 .help("Time it takes to complete a span in seconds")
+                 .buckets(timerHistogramBuckets)
+                 .label[String](completerNameLabel)
+                 .asTimer
+                 .build
     } yield new SpanCompleter[F] {
       override def complete(span: CompletedSpan.Builder): F[Unit] =
         timer.time(
@@ -61,4 +65,5 @@ object InstrumentedSpanCompleter {
         )
     }
   }
+
 }

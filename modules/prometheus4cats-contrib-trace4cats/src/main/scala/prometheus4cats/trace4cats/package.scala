@@ -16,10 +16,11 @@
 
 package prometheus4cats
 
-package object trace4cats
-    extends Trace4CatsExemplarInstances
-    with Trace4CatsExemplarSamplerInstances {
+package object trace4cats extends Trace4CatsExemplarInstances with Trace4CatsExemplarSamplerInstances {
+
   val DefaultTraceIdLabelName: Exemplar.LabelName =
     Exemplar.LabelName("traceID")
+
   val DefaultSpanIdLabelName: Exemplar.LabelName = Exemplar.LabelName("spanID")
+
 }

@@ -18,9 +18,13 @@ package prometheus4cats.fs2kafka
 
 import java.util.UUID
 
+import scala.concurrent.duration._
+import scala.jdk.CollectionConverters._
+
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.syntax.all._
+
 import com.dimafeng.testcontainers.KafkaContainer
 import com.dimafeng.testcontainers.munit.TestContainerForAll
 import fs2.kafka._
@@ -34,10 +38,8 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 import prometheus4cats.MetricFactory
 import prometheus4cats.javasimpleclient.JavaMetricRegistry
 
-import scala.concurrent.duration._
-import scala.jdk.CollectionConverters._
-
 class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
+
   override val containerDef: KafkaContainer.Def = KafkaContainer.Def()
 
   private[this] def nextTopicName: IO[String] =
@@ -45,8 +47,8 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
 
   final def withTopic[A](f: String => IO[A]): IO[A] = for {
     topic <- nextTopicName
-    _ <- createCustomTopic(topic, Map.empty, 1)
-    a <- f(topic)
+    _     <- createCustomTopic(topic, Map.empty, 1)
+    a     <- f(topic)
   } yield a
 
   protected def adminClient: Resource[IO, KafkaAdminClient[IO]] =
@@ -79,7 +81,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
       .resource(
         ConsumerSettings[IO, K, V]
           .withProperties(defaultConsumerProperties)
-          .withRecordMetadata(_.timestamp.toString)
+          .withRecordMetadata(_.timestamp.show)
           .withIsolationLevel(IsolationLevel.ReadCommitted)
       )
 
@@ -97,7 +99,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
   ): Resource[IO, TransactionalKafkaProducer.WithoutOffsets[IO, K, V]] =
     TransactionalKafkaProducer.resource(
       TransactionalProducerSettings[IO, K, V](
-        UUID.randomUUID().toString,
+        UUID.randomUUID().show,
         ProducerSettings[IO, K, V]
           .withProperties(defaultProducerConfig)
           .withRetries(1)
@@ -107,19 +109,18 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
   final def defaultProducerConfig = withContainers { container =>
     Map[String, String](
       ProducerConfig.BOOTSTRAP_SERVERS_CONFIG -> container.bootstrapServers,
-      ProducerConfig.MAX_BLOCK_MS_CONFIG -> 10000.toString,
-      ProducerConfig.RETRY_BACKOFF_MS_CONFIG -> 1000.toString
+      ProducerConfig.MAX_BLOCK_MS_CONFIG      -> 10000.show,
+      ProducerConfig.RETRY_BACKOFF_MS_CONFIG  -> 1000.show
     )
   }
 
-  final def defaultConsumerProperties: Map[String, String] = withContainers {
-    container =>
-      Map(
-        ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG -> container.bootstrapServers,
-        ConsumerConfig.AUTO_OFFSET_RESET_CONFIG -> "earliest",
-        ConsumerConfig.GROUP_ID_CONFIG -> "test-group-id",
-        ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG -> "false"
-      )
+  final def defaultConsumerProperties: Map[String, String] = withContainers { container =>
+    Map(
+      ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG  -> container.bootstrapServers,
+      ConsumerConfig.AUTO_OFFSET_RESET_CONFIG  -> "earliest",
+      ConsumerConfig.GROUP_ID_CONFIG           -> "test-group-id",
+      ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG -> "false"
+    )
   }
 
   // Use slf4j + logback to see any warnings in the logs
@@ -159,7 +160,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                   assertEquals(
                     samples
                       .find(
-                        _.name == "prometheus4cats_collection_callback_duplicates"
+                        _.name === "prometheus4cats_collection_callback_duplicates"
                       )
                       .map(_.samples.isEmpty),
                     Some(true)
@@ -187,46 +188,45 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
           consumerResource[String, String],
           producerResource[String, String],
           factory
-        ).tupled.use {
-          case (consumer1, consumer2, producer, (metrics, registry)) =>
-            KafkaMetrics
-              .registerConsumerCallback(metrics, consumer1, consumerGroup1)
-              .surround(
-                producer.produce(
-                  ProducerRecords
-                    .one(ProducerRecord(topic1, "test", "test"))
-                ) >> consumer1
-                  .subscribeTo(
-                    topic1
-                  ) >> consumer1.stream.take(1).compile.drain >> KafkaMetrics
-                  .registerConsumerCallback(metrics, consumer2, consumerGroup2)
-                  .surround(
-                    producer
-                      .produce(
-                        ProducerRecords
-                          .one(ProducerRecord(topic2, "test", "test"))
-                      ) >> consumer2
-                      .subscribeTo(
-                        topic2
-                      ) >> consumer2.stream.take(1).compile.drain >> IO
-                      .delay(registry.metricFamilySamples().asScala.toList)
-                      .map { samples =>
-                        assertEquals(
-                          samples
-                            .find(
-                              _.name == "prometheus4cats_collection_callback_duplicates"
-                            )
-                            .map(_.samples.isEmpty),
-                          Some(true)
-                        )
-                        assert(
-                          samples.exists(
-                            _.name.startsWith("kafka_client_consumer")
+        ).tupled.use { case (consumer1, consumer2, producer, (metrics, registry)) =>
+          KafkaMetrics
+            .registerConsumerCallback(metrics, consumer1, consumerGroup1)
+            .surround(
+              producer.produce(
+                ProducerRecords
+                  .one(ProducerRecord(topic1, "test", "test"))
+              ) >> consumer1
+                .subscribeTo(
+                  topic1
+                ) >> consumer1.stream.take(1).compile.drain >> KafkaMetrics
+                .registerConsumerCallback(metrics, consumer2, consumerGroup2)
+                .surround(
+                  producer
+                    .produce(
+                      ProducerRecords
+                        .one(ProducerRecord(topic2, "test", "test"))
+                    ) >> consumer2
+                    .subscribeTo(
+                      topic2
+                    ) >> consumer2.stream.take(1).compile.drain >> IO
+                    .delay(registry.metricFamilySamples().asScala.toList)
+                    .map { samples =>
+                      assertEquals(
+                        samples
+                          .find(
+                            _.name === "prometheus4cats_collection_callback_duplicates"
                           )
+                          .map(_.samples.isEmpty),
+                        Some(true)
+                      )
+                      assert(
+                        samples.exists(
+                          _.name.startsWith("kafka_client_consumer")
                         )
-                      }
-                  )
-              )
+                      )
+                    }
+                )
+            )
         }
       }
     }
@@ -237,37 +237,36 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
     val producerName = "test"
 
     withTopic { topic =>
-      (producerResource[String, String], factory).tupled.use {
-        case (producer, (metrics, registry)) =>
-          KafkaMetrics
-            .registerProducerCallback(metrics, producer, producerName)
-            .surround(
-              producer
-                .produce(
-                  ProducerRecords(
-                    List(ProducerRecord(topic, "test", "test"))
-                  )
+      (producerResource[String, String], factory).tupled.use { case (producer, (metrics, registry)) =>
+        KafkaMetrics
+          .registerProducerCallback(metrics, producer, producerName)
+          .surround(
+            producer
+              .produce(
+                ProducerRecords(
+                  List(ProducerRecord(topic, "test", "test"))
                 )
-                .flatten >> IO
-                .delay(registry.metricFamilySamples().asScala.toList)
-                .map { samples =>
-                  assertEquals(
-                    samples
-                      .find(
-                        _.name == "prometheus4cats_collection_callback_duplicates"
-                      )
-                      .map(_.samples.isEmpty),
-                    Some(true)
-                  )
-                  assert(
-                    samples.exists(_.name.startsWith("kafka_client_producer"))
-                  )
-                  assert(
-                    samples
-                      .exists(_.name.startsWith("kafka_client_producer_node"))
-                  )
-                }
-            )
+              )
+              .flatten >> IO
+              .delay(registry.metricFamilySamples().asScala.toList)
+              .map { samples =>
+                assertEquals(
+                  samples
+                    .find(
+                      _.name === "prometheus4cats_collection_callback_duplicates"
+                    )
+                    .map(_.samples.isEmpty),
+                  Some(true)
+                )
+                assert(
+                  samples.exists(_.name.startsWith("kafka_client_producer"))
+                )
+                assert(
+                  samples
+                    .exists(_.name.startsWith("kafka_client_producer_node"))
+                )
+              }
+          )
 
       }
 
@@ -307,7 +306,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                     assert(
                       samples
                         .find(
-                          _.name == "prometheus4cats_collection_callback_duplicates"
+                          _.name === "prometheus4cats_collection_callback_duplicates"
                         )
                         .forall(_.samples.isEmpty)
                     )
@@ -351,7 +350,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                 assertEquals(
                   samples
                     .find(
-                      _.name == "prometheus4cats_collection_callback_duplicates"
+                      _.name === "prometheus4cats_collection_callback_duplicates"
                     )
                     .map(_.samples.isEmpty),
                   Some(true)
@@ -409,7 +408,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                     assertEquals(
                       samples
                         .find(
-                          _.name == "prometheus4cats_collection_callback_duplicates"
+                          _.name === "prometheus4cats_collection_callback_duplicates"
                         )
                         .map(_.samples.isEmpty),
                       Some(true)
@@ -431,4 +430,5 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
 
     }
   }
+
 }
