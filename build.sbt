@@ -1,124 +1,34 @@
-// https://typelevel.org/sbt-typelevel/faq.html#what-is-a-base-version-anyway
-ThisBuild / tlBaseVersion := "2.1" // your current series x.y
+ThisBuild / scalaVersion           := "2.13.14"
+ThisBuild / crossScalaVersions     := Seq("2.12.19", "2.13.14", "3.3.3")
+ThisBuild / organization           := "com.permutive"
+ThisBuild / versionPolicyIntention := Compatibility.None
 
-ThisBuild / organization := "com.permutive"
-ThisBuild / organizationName := "Permutive"
-ThisBuild / startYear := Some(2022)
-ThisBuild / licenses := Seq(License.Apache2)
-ThisBuild / developers := List(
-  // your GitHub handle and name
-  tlGitHubDev("janstenpickle", "Chris Jansen")
-)
+addCommandAlias("ci-test", "fix --check; versionPolicyCheck; mdoc; publishLocal; +test")
+addCommandAlias("ci-docs", "github; mdoc; headerCreateAll")
+addCommandAlias("ci-publish", "versionCheck; github; ci-release")
 
-// publish to s01.oss.sonatype.org (set to true to publish to oss.sonatype.org instead)
-ThisBuild / tlSonatypeUseLegacyHost := true
+lazy val documentation = project
+  .enablePlugins(MdocPlugin)
 
-ThisBuild / tlCiDependencyGraphJob := false
+lazy val `prometheus4cats-contrib-cats-effect` = module
+  .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-cats-effect`)
+  .settings(libraryDependencies ++= scalaVersion.value.on(2, 12)(Dependencies.`scala-collection-compat`))
 
-val Scala213 = "2.13.13"
-ThisBuild / crossScalaVersions := Seq("2.12.19", Scala213, "3.3.3")
-ThisBuild / scalaVersion := Scala213 // the default Scala
+lazy val `prometheus4cats-contrib-trace4cats` = module
+  .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-trace4cats`)
 
-val Prometheus4Cats = "2.0.0"
+lazy val `prometheus4cats-contrib-refreshable` = module
+  .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-refreshable`)
+  .settings(libraryDependencies ++= scalaVersion.value.on(2)(Dependencies.`kind-projector`))
 
-val CollectionCompat = "2.12.0"
+lazy val `prometheus4cats-contrib-google-cloud-bigtable` = module
+  .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-google-cloud-bigtable`)
+  .dependsOn(`prometheus4cats-contrib-opencensus`)
 
-lazy val root =
-  tlCrossRootProject.aggregate(
-    catsEffect,
-    trace4Cats,
-    refreshable,
-    googleCloudBigtable,
-    opencensus,
-    fs2Kafka
-  )
+lazy val `prometheus4cats-contrib-opencensus` = module
+  .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-opencensus`)
+  .settings(libraryDependencies ++= scalaVersion.value.on(2, 12)(Dependencies.`scala-collection-compat`))
 
-lazy val catsEffect = project
-  .in(file("cats-effect"))
-  .settings(
-    name := "prometheus4cats-contrib-cats-effect",
-    libraryDependencies ++= Seq(
-      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "org.typelevel" %% "cats-effect" % "3.4.11"
-    ),
-    libraryDependencies ++= PartialFunction
-      .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
-        case Some((2, 12)) =>
-          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
-      }
-      .toList
-  )
-
-lazy val trace4Cats = project
-  .in(file("trace4cats"))
-  .settings(
-    name := "prometheus4cats-contrib-trace4cats",
-    libraryDependencies ++= Seq(
-      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "io.janstenpickle" %% "trace4cats-core" % "0.14.7"
-    )
-  )
-
-lazy val refreshable = project
-  .in(file("refreshable"))
-  .settings(
-    name := "prometheus4cats-contrib-refreshable",
-    libraryDependencies ++= Seq(
-      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.permutive" %% "refreshable" % "2.0.0"
-    )
-  )
-
-lazy val googleCloudBigtable = project
-  .in(file("bigtable"))
-  .settings(
-    name := "prometheus4cats-contrib-google-cloud-bigtable",
-    libraryDependencies ++= Seq(
-      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.google.cloud" % "google-cloud-bigtable" % "2.20.4",
-      "org.scalameta" %%% "munit" % "0.7.29" % Test,
-      "org.typelevel" %%% "munit-cats-effect-3" % "1.0.7" % Test,
-      "org.typelevel" %%% "cats-effect-testkit" % "3.4.11" % Test,
-      "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.155.4" % Test
-    )
-  )
-  .dependsOn(opencensus)
-
-lazy val opencensus = project
-  .in(file("opencensus"))
-  .settings(
-    name := "prometheus4cats-contrib-opencensus",
-    libraryDependencies ++= Seq(
-      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "io.opencensus" % "opencensus-impl" % "0.31.1"
-    ),
-    libraryDependencies ++= PartialFunction
-      .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
-        case Some((2, 12)) =>
-          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
-      }
-      .toList
-  )
-
-lazy val fs2Kafka = project
-  .in(file("fs2-kafka"))
-  .settings(
-    name := "prometheus4cats-contrib-fs2-kafka",
-    libraryDependencies ++= Seq(
-      "com.permutive" %% "prometheus4cats" % Prometheus4Cats,
-      "com.github.fd4s" %% "fs2-kafka" % "3.5.0",
-      "com.dimafeng" %% "testcontainers-scala-munit" % "0.40.14" % Test,
-      "com.dimafeng" %% "testcontainers-scala-kafka" % "0.40.14" % Test,
-      "com.permutive" %% "prometheus4cats-java" % Prometheus4Cats % Test,
-      "ch.qos.logback" % "logback-classic" % "1.2.11" % Test, // scala-steward:off
-      "org.typelevel" %% "munit-cats-effect-3" % "1.0.7" % Test,
-      "org.typelevel" %% "cats-effect-testkit" % "3.4.11" % Test,
-      "org.typelevel" %% "log4cats-slf4j" % "2.6.0" % Test
-    ),
-    libraryDependencies ++= PartialFunction
-      .condOpt(CrossVersion.partialVersion(scalaVersion.value)) {
-        case Some((2, 12)) =>
-          "org.scala-lang.modules" %% "scala-collection-compat" % CollectionCompat
-      }
-      .toList
-  )
+lazy val `prometheus4cats-contrib-fs2-kafka` = module
+  .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-fs2-kafka`)
+  .settings(libraryDependencies ++= scalaVersion.value.on(2, 12)(Dependencies.`scala-collection-compat`))

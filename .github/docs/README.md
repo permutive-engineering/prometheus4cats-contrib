@@ -13,7 +13,7 @@ smart constructor to enable metric collection on the Java client and registering
 [`MetricFactory.WithCallbacks`].
 
 ```sbt
-"com.permutive" %% "prometheus4cats-contrib-google-cloud-bigtable" % "2.2.0"
+"com.permutive" %% "prometheus4cats-contrib-google-cloud-bigtable" % "@VERSION@"
 ```
 
 ## Cats-Effect
@@ -25,7 +25,7 @@ Use the [`CatsEffectMBeans`](/modules/prometheus4cats-contrib-cats-effect/src/ma
 smart constructor register callbacks for [Cats-Effect] MBeans with [`MetricFactory.WithCallbacks`].
 
 ```sbt
-"com.permutive" %% "prometheus4cats-contrib-cats-effect" % "2.2.0"
+"com.permutive" %% "prometheus4cats-contrib-cats-effect" % "@VERSION@"
 ```
 
 ## FS2-Kafka
@@ -37,7 +37,7 @@ Use the smart constructors in [`KafkaMetrics`](/modules/prometheus4cats-contrib-
 to register callbacks for producers and consumers with a [`MetricFactory.WithCallbacks`].
 
 ```sbt
-"com.permutive" %% "prometheus4cats-contrib-fs2-kafka" % "2.2.0"
+"com.permutive" %% "prometheus4cats-contrib-fs2-kafka" % "@VERSION@"
 ```
 
 ## Refreshable
@@ -58,7 +58,7 @@ Use the [`InstrumentedRefreshable`](/modules/prometheus4cats-contrib-refreshable
 smart constructor to instrument a given `Refreshable` when used with an instance of [`MetricFactory.WithCallbacks`].
 
 ```sbt
-"com.permutive" %% "prometheus4cats-contrib-refreshable" % "2.2.0"
+"com.permutive" %% "prometheus4cats-contrib-refreshable" % "@VERSION@"
 ```
 
 ## Trace4Cats
@@ -80,7 +80,7 @@ Use the [`InstrumentedEntrypoint`](/modules/prometheus4cats-contrib-trace4cats/s
 a [`MetricFactory`] to return instrumented wrappers of the underlying implementations.
 
 ```sbt
-"com.permutive" %% "prometheus4cats-contrib-trace4cats" % "2.2.0"
+"com.permutive" %% "prometheus4cats-contrib-trace4cats" % "@VERSION@"
 ```
 
 [Cats-Effect]: https://typelevel.org/cats-effect
