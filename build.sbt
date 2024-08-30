@@ -19,7 +19,7 @@ lazy val `prometheus4cats-contrib-trace4cats` = module
 
 lazy val `prometheus4cats-contrib-refreshable` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-refreshable`)
-  .settings(libraryDependencies += Dependencies.`kind-projector`)
+  .settings(libraryDependencies ++= scalaVersion.value.on(2)(Dependencies.`kind-projector`))
 
 lazy val `prometheus4cats-contrib-google-cloud-bigtable` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-google-cloud-bigtable`)
