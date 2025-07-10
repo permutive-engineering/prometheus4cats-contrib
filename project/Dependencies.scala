@@ -40,7 +40,7 @@ object Dependencies {
     "com.github.fd4s" %% "fs2-kafka"       % "3.5.1",
     "com.permutive"   %% "prometheus4cats" % "3.0.0"
   ) ++ Seq(
-    "ch.qos.logback" % "logback-classic"            % "1.2.11", // scala-steward:of,
+    "ch.qos.logback" % "logback-classic"            % "1.2.13", // scala-steward:of,
     "com.dimafeng"  %% "testcontainers-scala-kafka" % "0.41.4",
     "com.dimafeng"  %% "testcontainers-scala-munit" % "0.41.4",
     "com.permutive" %% "prometheus4cats-java"       % "3.0.0",
