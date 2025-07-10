@@ -37,7 +37,7 @@ object Dependencies {
   )
 
   lazy val `prometheus4cats-contrib-fs2-kafka` = Seq(
-    "com.github.fd4s" %% "fs2-kafka"       % "3.5.1",
+    "com.github.fd4s" %% "fs2-kafka"       % "3.8.0",
     "com.permutive"   %% "prometheus4cats" % "3.0.0"
   ) ++ Seq(
     "ch.qos.logback" % "logback-classic"            % "1.2.13", // scala-steward:of,
