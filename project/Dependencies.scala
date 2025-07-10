@@ -4,7 +4,7 @@ object Dependencies {
 
   lazy val `kind-projector` = compilerPlugin(("org.typelevel" % "kind-projector" % "0.13.3").cross(CrossVersion.full))
 
-  lazy val `scala-collection-compat` = "org.scala-lang.modules" %% "scala-collection-compat" % "2.12.0"
+  lazy val `scala-collection-compat` = "org.scala-lang.modules" %% "scala-collection-compat" % "2.13.0"
 
   lazy val `prometheus4cats-contrib-cats-effect` = Seq(
     "com.permutive" %% "prometheus4cats" % "3.0.0",
