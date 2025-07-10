@@ -42,7 +42,7 @@ object Dependencies {
   ) ++ Seq(
     "ch.qos.logback" % "logback-classic"            % "1.2.13", // scala-steward:of,
     "com.dimafeng"  %% "testcontainers-scala-kafka" % "0.41.8",
-    "com.dimafeng"  %% "testcontainers-scala-munit" % "0.41.4",
+    "com.dimafeng"  %% "testcontainers-scala-munit" % "0.41.8",
     "com.permutive" %% "prometheus4cats-java"       % "3.0.0",
     "org.typelevel" %% "cats-effect-testkit"        % "3.5.4",
     "org.typelevel" %% "log4cats-slf4j"             % "2.7.0",
