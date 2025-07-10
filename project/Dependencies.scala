@@ -22,7 +22,7 @@ object Dependencies {
   )
 
   lazy val `prometheus4cats-contrib-google-cloud-bigtable` = Seq(
-    "com.google.cloud" % "google-cloud-bigtable" % "2.42.0",
+    "com.google.cloud" % "google-cloud-bigtable" % "2.61.0",
     "com.permutive"   %% "prometheus4cats"       % "3.0.0"
   ) ++ Seq(
     "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.179.0",
