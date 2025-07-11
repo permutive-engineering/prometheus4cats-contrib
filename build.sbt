@@ -1,7 +1,7 @@
 ThisBuild / scalaVersion           := "2.13.16"
-ThisBuild / crossScalaVersions     := Seq("2.12.20", "2.13.16", "3.3.6")
+ThisBuild / crossScalaVersions     := Seq("2.13.16", "3.3.6")
 ThisBuild / organization           := "com.permutive"
-ThisBuild / versionPolicyIntention := Compatibility.BinaryAndSourceCompatible
+ThisBuild / versionPolicyIntention := Compatibility.None
 
 addCommandAlias("ci-test", "fix --check; versionPolicyCheck; mdoc; publishLocal; +test")
 addCommandAlias("ci-docs", "github; mdoc; headerCreateAll")
@@ -12,7 +12,6 @@ lazy val documentation = project
 
 lazy val `prometheus4cats-contrib-cats-effect` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-cats-effect`)
-  .settings(libraryDependencies ++= scalaVersion.value.on(2, 12)(Dependencies.`scala-collection-compat`))
 
 lazy val `prometheus4cats-contrib-trace4cats` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-trace4cats`)
@@ -27,8 +26,6 @@ lazy val `prometheus4cats-contrib-google-cloud-bigtable` = module
 
 lazy val `prometheus4cats-contrib-opencensus` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-opencensus`)
-  .settings(libraryDependencies ++= scalaVersion.value.on(2, 12)(Dependencies.`scala-collection-compat`))
 
 lazy val `prometheus4cats-contrib-fs2-kafka` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-fs2-kafka`)
-  .settings(libraryDependencies ++= scalaVersion.value.on(2, 12)(Dependencies.`scala-collection-compat`))
