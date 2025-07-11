@@ -33,8 +33,6 @@ import munit.CatsEffectSuite
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
-import org.typelevel.log4cats.SelfAwareStructuredLogger
-import org.typelevel.log4cats.slf4j.Slf4jLogger
 import prometheus4cats.MetricFactory
 import prometheus4cats.javasimpleclient.JavaMetricRegistry
 
@@ -123,15 +121,12 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
     )
   }
 
-  // Use slf4j + logback to see any warnings in the logs
-  implicit val logger: SelfAwareStructuredLogger[IO] = Slf4jLogger.getLogger[IO]
-
   val factory =
     Resource.eval(IO.delay(new CollectorRegistry())).flatMap { reg =>
       JavaMetricRegistry
-        .Builder()
+        .Builder[IO]()
         .withRegistry(reg)
-        .build[IO]
+        .build
         .map(MetricFactory.builder.build(_) -> reg)
     }
 
