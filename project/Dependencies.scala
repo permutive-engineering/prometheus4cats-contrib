@@ -38,12 +38,10 @@ object Dependencies {
     "com.github.fd4s" %% "fs2-kafka"       % "3.8.0",
     "com.permutive"   %% "prometheus4cats" % "4.0.0"
   ) ++ Seq(
-    "ch.qos.logback" % "logback-classic"            % "1.5.18", // scala-steward:of,
     "com.dimafeng"  %% "testcontainers-scala-kafka" % "0.43.0",
     "com.dimafeng"  %% "testcontainers-scala-munit" % "0.43.0",
     "com.permutive" %% "prometheus4cats-java"       % "4.0.0",
     "org.typelevel" %% "cats-effect-testkit"        % "3.6.2",
-    "org.typelevel" %% "log4cats-slf4j"             % "2.7.1",
     "org.typelevel" %% "munit-cats-effect"          % "2.1.0"
   ).map(_ % Test)
 

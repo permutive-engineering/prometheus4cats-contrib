@@ -16,6 +16,8 @@
 
 package prometheus4cats.bigtable
 
+import scala.annotation.nowarn
+
 import cats.effect.kernel.Resource
 import cats.effect.kernel.Sync
 
@@ -36,6 +38,7 @@ object BigtableOpenCensusMetrics {
         _.replace(openCensusPrefix, "bigtable_")
       )
 
+  @nowarn("msg=deprecated")
   private[bigtable] def enableClientMetrics[F[_]: Sync]: F[Unit] =
     Sync[F].blocking {
       BigtableDataSettings.enableOpenCensusStats()
