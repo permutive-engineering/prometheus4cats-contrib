@@ -156,12 +156,7 @@ object CatsEffectMBeans {
                                 Right((MetricCollection.empty, 0, 0))
                               )(
                                 readAttributes(
-                                  mbs,
-                                  _,
-                                  MetricCollection.empty,
-                                  "compute_pool",
-                                  nameMap,
-                                  Map.empty
+                                  mbs, _, MetricCollection.empty, "compute_pool", nameMap, Map.empty
                                 )
                               )
           cpuStarvationRes <- cpuStarvation
@@ -171,12 +166,7 @@ object CatsEffectMBeans {
                                   val (col, parseErrors, errors) = computePoolRes
 
                                   readAttributes(
-                                    mbs,
-                                    cpuStarvationMBean,
-                                    col,
-                                    "cpu_starvation",
-                                    nameMap,
-                                    Map.empty
+                                    mbs, cpuStarvationMBean, col, "cpu_starvation", nameMap, Map.empty
                                   ).map { case (c, pe, e) =>
                                     (c, parseErrors + pe, errors + e)
                                   }
