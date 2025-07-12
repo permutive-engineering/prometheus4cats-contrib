@@ -16,7 +16,7 @@ object Dependencies {
 
   lazy val `prometheus4cats-contrib-refreshable` = Seq(
     "com.permutive" %% "prometheus4cats" % "4.0.1",
-    "com.permutive" %% "refreshable"     % "2.0.0"
+    "com.permutive" %% "refreshable"     % "2.1.0"
   )
 
   lazy val `prometheus4cats-contrib-google-cloud-bigtable` = Seq(
