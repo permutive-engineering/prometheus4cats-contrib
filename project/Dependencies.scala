@@ -45,4 +45,9 @@ object Dependencies {
     "org.typelevel" %% "munit-cats-effect"          % "2.1.0"
   ).map(_ % Test)
 
+  lazy val `prometheus4cats-contrib-circuit` = Seq(
+    "com.permutive"     %% "prometheus4cats" % "4.1.0",
+    "io.chrisdavenport" %% "circuit"         % "0.5.1"
+  )
+
 }

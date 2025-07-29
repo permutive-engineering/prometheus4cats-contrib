@@ -29,3 +29,6 @@ lazy val `prometheus4cats-contrib-opencensus` = module
 
 lazy val `prometheus4cats-contrib-fs2-kafka` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-fs2-kafka`)
+
+lazy val `prometheus4cats-contrib-circuit` = module
+  .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-circuit`)
