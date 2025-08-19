@@ -18,8 +18,7 @@ trait RejectedExecutionCounter[F[_]] {
 
 object RejectedExecutionCounter {
 
-  /** Initialization of the Generalized Modifier which can be applied to multiple circuit breakers.
-    */
+  /** Initialization of the Generalized Modifier which can be applied to multiple circuit breakers. */
   def register[F[_]](
       mr: MetricRegistry[F],
       metricName: Counter.Name = "circuit_rejected_execution_total"
