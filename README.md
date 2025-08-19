@@ -83,6 +83,20 @@ a [`MetricFactory`] to return instrumented wrappers of the underlying implementa
 "com.permutive" %% "prometheus4cats-contrib-trace4cats" % "4.2.0"
 ```
 
+## Circuit
+
+Instrumented implementations of [Circuit] interface. Provides the following metrics:
+
+| Interface        | Metric Name                        | Labels         | Metric Type | Description                         |
+|------------------|------------------------------------|----------------|-------------|-------------------------------------|
+| `CircuitBreaker` | `circuit_rejected_execution_total` | `circuit_name` | Counter     | Circuit Breaker Rejected Executions |
+
+Use the [`RejectedExecutionCounter`](/modules/prometheus4cats-contrib-circuit/src/main/scala/prometheus4cats/circuit/RejectedExecutionCounter.scala) with a [`MetricFactory`] to return instrumented wrappers of the underlying `CircuitBreaker` implementation.
+
+```sbt
+"com.permutive" %% "prometheus4cats-contrib-circuit" % "4.3.0"
+```
+
 [Cats-Effect]: https://typelevel.org/cats-effect
 [FS2-Kafka]: https://fd4s.github.io/fs2-kafka/
 [Refreshable]: https://github.com/permutive-engineering/refreshable
@@ -90,3 +104,4 @@ a [`MetricFactory`] to return instrumented wrappers of the underlying implementa
 [Prometheus4Cats]: https://github.com/permutive-engineering/prometheus4cats
 [`MetricFactory`]: https://permutive-engineering.github.io/prometheus4cats/docs/interface/metric-factory/
 [`MetricFactory.WithCallbacks`]: https://permutive-engineering.github.io/prometheus4cats/docs/interface/metric-factory/#metricfactory-or-metricfactorywithcallbacks
+[Circuit]: https://github.com/davenverse/circuit
