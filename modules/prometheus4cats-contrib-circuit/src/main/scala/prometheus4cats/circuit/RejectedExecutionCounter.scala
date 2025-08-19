@@ -4,7 +4,7 @@ import cats.effect._
 import io.chrisdavenport.circuit._
 import prometheus4cats._
 
-abstract class RejectedExecutionCounter[F[_]]{
+trait RejectedExecutionCounter[F[_]]{
   def meteredCircuit(c: CircuitBreaker[F], circuitName: String): CircuitBreaker[F]
   def meteredResourceCircuit(c: CircuitBreaker[({type lambda[x] = Resource[F, x]})#lambda], circuitName: String): CircuitBreaker[({type lambda[x] = Resource[F, x]})#lambda]
 }
@@ -17,15 +17,15 @@ object RejectedExecutionCounter {
    */
   def register[F[_]](
     mr: MetricRegistry[F],
-    metricName: Counter.Name = Counter.Name("circuit_rejected_execution_total")
+    metricName: Counter.Name = "circuit_rejected_execution_total"
   ): Resource[F, RejectedExecutionCounter[F]] =
     MetricFactory
       .builder
       .build(mr)
       .counter(metricName)
       .ofLong
-      .help(Metric.Help("Circuit Breaker Rejected Executions."))
-      .label[String](Label.Name("circuit_name"))
+      .help("Circuit Breaker Rejected Executions.")
+      .label[String]("circuit_name")
       .build
       .map(new DefaultRejectedExecutionCounter(_))
 
@@ -51,7 +51,7 @@ object RejectedExecutionCounter {
       .build(mr)
       .counter(metricName)
       .ofLong
-      .help(Metric.Help("Circuit Breaker Rejected Executions."))
+      .help("Circuit Breaker Rejected Executions.")
       .build
       .map(counter => circuit.doOnRejected(counter.inc))
 
