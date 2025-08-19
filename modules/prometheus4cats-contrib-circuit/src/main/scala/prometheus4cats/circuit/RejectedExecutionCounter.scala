@@ -1,6 +1,7 @@
 package prometheus4cats.circuit
 
 import cats.effect._
+
 import io.chrisdavenport.circuit._
 import prometheus4cats._
 
