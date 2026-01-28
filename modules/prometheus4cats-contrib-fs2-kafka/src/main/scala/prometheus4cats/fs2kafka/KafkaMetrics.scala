@@ -220,7 +220,7 @@ object KafkaMetrics {
             val newCol = for {
               transformedLabels <- transformLabels(name, labels)
               allLabels          = transformedLabels ++ extraLabels
-              help = prometheus4cats.Metric.Help
+              help               = prometheus4cats.Metric.Help
                        .from(name.description())
                        .getOrElse(
                          prometheus4cats.Metric.Help("Metric from kafka")
