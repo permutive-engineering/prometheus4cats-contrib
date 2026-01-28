@@ -40,7 +40,7 @@ abstract class Trace4CatsExemplarSampler[F[
     Clock[F].realTimeInstant.flatMap { currentTime =>
       Trace.WithContext[F].context.map { traceContext =>
         traceContext.traceFlags.sampled match {
-          case SampleDecision.Drop => None
+          case SampleDecision.Drop    => None
           case SampleDecision.Include =>
             Exemplar.Labels
               .of(

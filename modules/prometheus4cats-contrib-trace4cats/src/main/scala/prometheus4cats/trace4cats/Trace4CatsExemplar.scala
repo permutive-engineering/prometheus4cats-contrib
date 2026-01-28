@@ -32,7 +32,7 @@ final class Trace4CatsExemplar[F[_]: Functor: Trace.WithContext](
   override def get: F[Option[Exemplar.Labels]] =
     Trace.WithContext[F].context.map { traceContext =>
       traceContext.traceFlags.sampled match {
-        case SampleDecision.Drop => None
+        case SampleDecision.Drop    => None
         case SampleDecision.Include =>
           Exemplar.Labels
             .of(

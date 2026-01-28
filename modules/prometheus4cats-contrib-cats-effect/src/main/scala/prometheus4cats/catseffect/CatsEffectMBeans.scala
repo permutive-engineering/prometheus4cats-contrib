@@ -88,7 +88,7 @@ object CatsEffectMBeans {
     val metricFactory = factory.withPrefix("cats_effect")
 
     for {
-      mbs <- Sync[F].delay(ManagementFactory.getPlatformMBeanServer).toResource
+      mbs    <- Sync[F].delay(ManagementFactory.getPlatformMBeanServer).toResource
       mbeans <- Sync[F]
                   .blocking(mbs.queryMBeans(null, query).asScala) // scalafix:ok
                   .toResource
@@ -256,7 +256,7 @@ object CatsEffectMBeans {
     def value(update: Long => MetricCollection) = Either.catchNonFatal(
       convert(mbs.getAttribute(mbean.getObjectName, attribute.getName))
     ) match {
-      case Left(_) => (collection, 0, 1)
+      case Left(_)     => (collection, 0, 1)
       case Right(long) =>
         (
           update(long),
@@ -268,13 +268,13 @@ object CatsEffectMBeans {
     nameMap.get(attribute.getName).fold((collection, parseErrors, errors)) { name =>
       if (counters.contains(attribute.getName))
         Counter.Name.from(s"${prefix}_${name}_total") match {
-          case Left(_) => (collection, parseErrors + 1, errors)
+          case Left(_)            => (collection, parseErrors + 1, errors)
           case Right(counterName) =>
             value(collection.appendLongCounter(counterName, help, labels, _))
         }
       else
         Gauge.Name.from(s"${prefix}_$name") match {
-          case Left(_) => (collection, parseErrors + 1, errors)
+          case Left(_)          => (collection, parseErrors + 1, errors)
           case Right(gaugeName) =>
             value(collection.appendLongGauge(gaugeName, help, labels, _))
         }
