@@ -121,9 +121,9 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
     )
   }
 
-  /** Returns the names of all metrics currently registered in the registry. v5 had `metricFamilySamples()`
-    * returning an enumeration of `MetricFamilySamples` with `.name`; v6 has `scrape()` returning
-    * `MetricSnapshots` with `getMetadata.getName`. We just need names for these tests.
+  /** Returns the names of all metrics currently registered in the registry. v5 had `metricFamilySamples()` returning an
+    * enumeration of `MetricFamilySamples` with `.name`; v6 has `scrape()` returning `MetricSnapshots` with
+    * `getMetadata.getName`. We just need names for these tests.
     */
   private def metricNames(reg: PrometheusRegistry): List[String] =
     reg.scrape().asScala.toList.map(_.getMetadata.getName)
