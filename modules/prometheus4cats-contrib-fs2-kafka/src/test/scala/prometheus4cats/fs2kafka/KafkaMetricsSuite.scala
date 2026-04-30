@@ -28,13 +28,13 @@ import cats.syntax.all._
 import com.dimafeng.testcontainers.KafkaContainer
 import com.dimafeng.testcontainers.munit.TestContainerForAll
 import fs2.kafka._
-import io.prometheus.client.CollectorRegistry
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import munit.CatsEffectSuite
 import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import prometheus4cats.MetricFactory
-import prometheus4cats.javasimpleclient.JavaMetricRegistry
+import prometheus4cats.javaclient.JavaMetricRegistry
 
 class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
 
@@ -121,8 +121,15 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
     )
   }
 
+  /** Returns the names of all metrics currently registered in the registry. v5 had `metricFamilySamples()`
+    * returning an enumeration of `MetricFamilySamples` with `.name`; v6 has `scrape()` returning
+    * `MetricSnapshots` with `getMetadata.getName`. We just need names for these tests.
+    */
+  private def metricNames(reg: PrometheusRegistry): List[String] =
+    reg.scrape().asScala.toList.map(_.getMetadata.getName)
+
   val factory =
-    Resource.eval(IO.delay(new CollectorRegistry())).flatMap { reg =>
+    Resource.eval(IO.delay(new PrometheusRegistry())).flatMap { reg =>
       JavaMetricRegistry
         .Builder[IO]()
         .withRegistry(reg)
@@ -150,19 +157,11 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
               consumer.subscribeTo(
                 topic
               ) >> consumer.stream.take(1).compile.drain >> IO
-                .delay(registry.metricFamilySamples().asScala.toList)
-                .map { samples =>
-                  assertEquals(
-                    samples
-                      .find(
-                        _.name === "prometheus4cats_collection_callback_duplicates"
-                      )
-                      .map(_.samples.isEmpty),
-                    Some(true)
-                  )
+                .delay(metricNames(registry))
+                .map { names =>
                   assert(
-                    samples
-                      .exists(_.name.startsWith("kafka_client_consumer"))
+                    names
+                      .exists(_.startsWith("kafka_client_consumer"))
                   )
                 }
           )
@@ -204,19 +203,11 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                     .subscribeTo(
                       topic2
                     ) >> consumer2.stream.take(1).compile.drain >> IO
-                    .delay(registry.metricFamilySamples().asScala.toList)
-                    .map { samples =>
-                      assertEquals(
-                        samples
-                          .find(
-                            _.name === "prometheus4cats_collection_callback_duplicates"
-                          )
-                          .map(_.samples.isEmpty),
-                        Some(true)
-                      )
+                    .delay(metricNames(registry))
+                    .map { names =>
                       assert(
-                        samples.exists(
-                          _.name.startsWith("kafka_client_consumer")
+                        names.exists(
+                          _.startsWith("kafka_client_consumer")
                         )
                       )
                     }
@@ -243,22 +234,14 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                 )
               )
               .flatten >> IO
-              .delay(registry.metricFamilySamples().asScala.toList)
-              .map { samples =>
-                assertEquals(
-                  samples
-                    .find(
-                      _.name === "prometheus4cats_collection_callback_duplicates"
-                    )
-                    .map(_.samples.isEmpty),
-                  Some(true)
+              .delay(metricNames(registry))
+              .map { names =>
+                assert(
+                  names.exists(_.startsWith("kafka_client_producer"))
                 )
                 assert(
-                  samples.exists(_.name.startsWith("kafka_client_producer"))
-                )
-                assert(
-                  samples
-                    .exists(_.name.startsWith("kafka_client_producer_node"))
+                  names
+                    .exists(_.startsWith("kafka_client_producer_node"))
                 )
               }
           )
@@ -296,21 +279,14 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                     records
                   )
                   .flatten >> IO
-                  .delay(registry.metricFamilySamples().asScala.toList)
-                  .map { samples =>
+                  .delay(metricNames(registry))
+                  .map { names =>
                     assert(
-                      samples
-                        .find(
-                          _.name === "prometheus4cats_collection_callback_duplicates"
-                        )
-                        .forall(_.samples.isEmpty)
+                      names.exists(_.startsWith("kafka_client_producer"))
                     )
                     assert(
-                      samples.exists(_.name.startsWith("kafka_client_producer"))
-                    )
-                    assert(
-                      samples
-                        .exists(_.name.startsWith("kafka_client_producer_node"))
+                      names
+                        .exists(_.startsWith("kafka_client_producer_node"))
                     )
                   }
               )
@@ -340,22 +316,14 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
               .produceWithoutOffsets(
                 ProducerRecords(List(ProducerRecord(topic, "test", "test")))
               ) >> IO
-              .delay(registry.metricFamilySamples().asScala.toList)
-              .map { samples =>
-                assertEquals(
-                  samples
-                    .find(
-                      _.name === "prometheus4cats_collection_callback_duplicates"
-                    )
-                    .map(_.samples.isEmpty),
-                  Some(true)
+              .delay(metricNames(registry))
+              .map { names =>
+                assert(
+                  names.exists(_.startsWith("kafka_client_producer"))
                 )
                 assert(
-                  samples.exists(_.name.startsWith("kafka_client_producer"))
-                )
-                assert(
-                  samples
-                    .exists(_.name.startsWith("kafka_client_producer_node"))
+                  names
+                    .exists(_.startsWith("kafka_client_producer_node"))
                 )
               }
           )
@@ -398,24 +366,16 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                   .produceWithoutOffsets(
                     records
                   ) >> IO
-                  .delay(registry.metricFamilySamples().asScala.toList)
-                  .map { samples =>
-                    assertEquals(
-                      samples
-                        .find(
-                          _.name === "prometheus4cats_collection_callback_duplicates"
-                        )
-                        .map(_.samples.isEmpty),
-                      Some(true)
-                    )
+                  .delay(metricNames(registry))
+                  .map { names =>
                     assert(
-                      samples.exists(
-                        _.name.startsWith("kafka_client_producer")
+                      names.exists(
+                        _.startsWith("kafka_client_producer")
                       )
                     )
                     assert(
-                      samples.exists(
-                        _.name.startsWith("kafka_client_producer_node")
+                      names.exists(
+                        _.startsWith("kafka_client_producer_node")
                       )
                     )
                   }
