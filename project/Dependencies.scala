@@ -23,7 +23,7 @@ object Dependencies {
     "com.google.cloud" % "google-cloud-bigtable" % "2.78.0",
     "com.permutive"   %% "prometheus4cats"       % "5.0.0"
   ) ++ Seq(
-    "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.202.1",
+    "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.215.0",
     "org.scalameta"   %% "munit"                          % "1.2.1",
     "org.typelevel"   %% "cats-effect-testkit"            % "3.6.3",
     "org.typelevel"   %% "munit-cats-effect"              % "2.1.0"
