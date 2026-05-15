@@ -39,7 +39,7 @@ object Dependencies {
     "com.permutive"   %% "prometheus4cats" % "5.0.0"
   ) ++ Seq(
     "com.dimafeng"  %% "testcontainers-scala-kafka" % "0.44.1",
-    "com.dimafeng"  %% "testcontainers-scala-munit" % "0.43.6",
+    "com.dimafeng"  %% "testcontainers-scala-munit" % "0.44.1",
     "com.permutive" %% "prometheus4cats-java"       % "5.0.0",
     "org.typelevel" %% "cats-effect-testkit"        % "3.6.3",
     "org.typelevel" %% "munit-cats-effect"          % "2.1.0"
