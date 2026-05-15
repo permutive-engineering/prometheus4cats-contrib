@@ -6,7 +6,7 @@ object Dependencies {
 
   lazy val `prometheus4cats-contrib-cats-effect` = Seq(
     "com.permutive" %% "prometheus4cats" % "5.0.1",
-    "org.typelevel" %% "cats-effect"     % "3.6.3"
+    "org.typelevel" %% "cats-effect"     % "3.7.0"
   )
 
   lazy val `prometheus4cats-contrib-trace4cats` = Seq(
