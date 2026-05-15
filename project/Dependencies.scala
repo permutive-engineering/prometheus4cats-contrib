@@ -24,7 +24,7 @@ object Dependencies {
     "com.permutive"   %% "prometheus4cats"       % "5.0.1"
   ) ++ Seq(
     "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.215.0",
-    "org.scalameta"   %% "munit"                          % "1.2.1",
+    "org.scalameta"   %% "munit"                          % "1.2.4",
     "org.typelevel"   %% "cats-effect-testkit"            % "3.6.3",
     "org.typelevel"   %% "munit-cats-effect"              % "2.1.0"
   ).map(_ % Test)
