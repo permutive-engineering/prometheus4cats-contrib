@@ -20,7 +20,7 @@ object Dependencies {
   )
 
   lazy val `prometheus4cats-contrib-google-cloud-bigtable` = Seq(
-    "com.google.cloud" % "google-cloud-bigtable" % "2.78.0",
+    "com.google.cloud" % "google-cloud-bigtable" % "2.71.0",
     "com.permutive"   %% "prometheus4cats"       % "5.0.1"
   ) ++ Seq(
     "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.215.0",
@@ -36,7 +36,7 @@ object Dependencies {
 
   lazy val `prometheus4cats-contrib-fs2-kafka` = Seq(
     "org.typelevel" %% "fs2-kafka"       % "4.0.0",
-    "com.permutive"   %% "prometheus4cats" % "5.0.1"
+    "com.permutive" %% "prometheus4cats" % "5.0.1"
   ) ++ Seq(
     "com.dimafeng"  %% "testcontainers-scala-kafka" % "0.44.1",
     "com.dimafeng"  %% "testcontainers-scala-munit" % "0.44.1",
