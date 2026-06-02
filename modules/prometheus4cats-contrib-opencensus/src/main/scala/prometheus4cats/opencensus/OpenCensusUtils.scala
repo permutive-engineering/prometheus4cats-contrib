@@ -172,7 +172,7 @@ object OpenCensusUtils {
             Some(
               prometheus4cats.Summary
                 .Value(
-                  summary.getCount.toDouble,
+                  summary.getCount,
                   summary.getSum,
                   summary.getSnapshot.getValueAtPercentiles.asScala.map { valueAtPercentile =>
                     valueAtPercentile.getPercentile -> valueAtPercentile.getValue
