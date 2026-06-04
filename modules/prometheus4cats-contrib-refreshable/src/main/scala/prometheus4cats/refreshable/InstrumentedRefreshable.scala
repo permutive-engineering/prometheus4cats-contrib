@@ -90,6 +90,7 @@ object InstrumentedRefreshable {
     (
       factory
         .counter("read_total")
+        .ofLong
         .help("Number of times this Refreshable has been read")
         .label[String](refreshableLabelName)
         .label[CachedValue[A]](
@@ -100,19 +101,20 @@ object InstrumentedRefreshable {
             case CachedValue.Cancelled(_) => "cancelled"
           }
         )
-        .contramap[Long](_.toDouble)
         .unsafeBuild,
       factory
         .gauge("is_running")
+        .ofLong
         .help("Whether this Refreshable is running or has been cancelled")
         .label[String](refreshableLabelName)
-        .contramap[Boolean](if (_) 1d else 0d)
+        .contramap[Boolean](if (_) 1L else 0L)
         .unsafeBuild,
       factory
         .gauge("retries_exhausted")
+        .ofLong
         .help("Whether retries have been exhausted for this Refreshable")
         .label[String](refreshableLabelName)
-        .contramap[Boolean](if (_) 1d else 0d)
+        .contramap[Boolean](if (_) 1L else 0L)
         .unsafeBuild
     ).tupled
   }
@@ -131,21 +133,22 @@ object InstrumentedRefreshable {
     (
       factory
         .counter("refresh_success_total")
+        .ofLong
         .help("Number of times refresh succeeded")
         .label[String](refreshableLabelName)
-        .contramap[Long](_.toDouble)
         .unsafeBuild,
       factory
         .gauge("refresh_failing")
+        .ofLong
         .help("Whether refresh is currently failing")
         .label[String](refreshableLabelName)
-        .contramap[Boolean](if (_) 1d else 0d)
+        .contramap[Boolean](if (_) 1L else 0L)
         .unsafeBuild,
       factory
         .counter("refresh_failure_total")
+        .ofLong
         .help("Number of times refresh failed")
         .label[String](refreshableLabelName)
-        .contramap[Long](_.toDouble)
         .unsafeBuild
     ).tupled
   }
@@ -158,6 +161,7 @@ object InstrumentedRefreshable {
     metricFactory
       .withPrefix(prefix)
       .gauge("status")
+      .ofLong
       .help("The current status of this Refreshable")
       .label[String](refreshableLabelName)
       .label[CachedValue[A]](
@@ -168,7 +172,7 @@ object InstrumentedRefreshable {
           case CachedValue.Cancelled(_) => "cancelled"
         }
       )
-      .callback(refreshable.get.map(v => NonEmptyList.one((1d, (name, v)))))
+      .callback(refreshable.get.map(v => NonEmptyList.one((1L, (name, v)))))
       .build
 
   private def metrics[F[_]: MonadCancelThrow, A](

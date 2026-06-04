@@ -44,12 +44,14 @@ object InstrumentedSpanCompleter {
     for {
       outcomeRecorder <- metricFactory
                            .counter("spans_total")
+                           .ofLong
                            .help("Total number of spans completed")
                            .label[String](completerNameLabel)
                            .asOutcomeRecorder
                            .build
       timer <- metricFactory
                  .histogram("complete_time")
+                 .ofDouble
                  .help("Time it takes to complete a span in seconds")
                  .buckets(timerHistogramBuckets)
                  .label[String](completerNameLabel)

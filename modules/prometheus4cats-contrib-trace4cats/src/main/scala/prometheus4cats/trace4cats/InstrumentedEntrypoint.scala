@@ -30,6 +30,7 @@ object InstrumentedEntrypoint {
     factory
       .withPrefix("trace4cats_entry_point")
       .counter("spans_total")
+      .ofLong
       .help("Total number of spans created")
       .label[SpanKind]("span_kind")
       .label[Boolean]("is_root")

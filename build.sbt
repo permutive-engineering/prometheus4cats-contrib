@@ -3,6 +3,8 @@ ThisBuild / crossScalaVersions     := Seq("2.13.18", "3.3.7")
 ThisBuild / organization           := "com.permutive"
 ThisBuild / versionPolicyIntention := Compatibility.None
 
+ThisBuild / scalacOptions += "-Wconf:msg=in class TypeStep is deprecated:silent"
+
 addCommandAlias("ci-test", "fix --check; versionPolicyCheck; mdoc; publishLocal; +test")
 addCommandAlias("ci-docs", "github; mdoc; headerCreateAll")
 addCommandAlias("ci-publish", "versionCheck; github; ci-release")

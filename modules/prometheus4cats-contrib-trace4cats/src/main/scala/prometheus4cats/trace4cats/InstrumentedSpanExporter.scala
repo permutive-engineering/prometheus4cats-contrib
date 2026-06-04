@@ -35,8 +35,8 @@ object InstrumentedSpanExporter {
       .of(1, 5, 10, 50, 100, 200, 500, 1000, 5000, 10000)
       .map(_ / 1000d)
 
-  val DefaultBatchSizeHistogramBuckets: NonEmptySeq[Double] =
-    NonEmptySeq.of(1d, 5d, 10d, 50d, 100d, 200d, 1000d, 2000d)
+  val DefaultBatchSizeHistogramBuckets: NonEmptySeq[Long] =
+    NonEmptySeq.of(1, 5, 10, 50, 100, 200, 1000, 2000)
 
   private val exporterNameLabel: Label.Name = "exporter_name"
 
@@ -45,19 +45,21 @@ object InstrumentedSpanExporter {
       exporter: SpanExporter[F, G],
       exporterName: String,
       timerHistogramBuckets: NonEmptySeq[Double] = DefaultTimerHistogramBuckets,
-      batchSizeHistogramBuckets: NonEmptySeq[Double] = DefaultBatchSizeHistogramBuckets
+      batchSizeHistogramBuckets: NonEmptySeq[Long] = DefaultBatchSizeHistogramBuckets
   ): Resource[F, SpanExporter[F, G]] = {
     val metricFactory = factory.withPrefix("trace4cats_exporter")
 
     for {
       outcomeRecorder <- metricFactory
                            .counter("batches_total")
+                           .ofLong
                            .help("Total number of batches sent via this exporter")
                            .label[String](exporterNameLabel)
                            .asOutcomeRecorder
                            .build
       timer <- metricFactory
                  .histogram("export_time")
+                 .ofDouble
                  .help("Time it takes to export a span batch in seconds")
                  .buckets(timerHistogramBuckets)
                  .label[String](exporterNameLabel)
@@ -65,6 +67,7 @@ object InstrumentedSpanExporter {
                  .build
       batchSize <- metricFactory
                      .histogram("batch_size")
+                     .ofLong
                      .help("Size distribution of batches sent by this exporter")
                      .buckets(batchSizeHistogramBuckets)
                      .label[String](exporterNameLabel)
@@ -73,7 +76,7 @@ object InstrumentedSpanExporter {
       override def exportBatch(batch: Batch[G]): F[Unit] = timer.time(
         outcomeRecorder.surround(exporter.exportBatch(batch), exporterName),
         exporterName
-      ) >> batchSize.observe(batch.spans.size.toDouble, exporterName)
+      ) >> batchSize.observe(batch.spans.size, exporterName)
     }
   }
 
