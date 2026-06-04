@@ -42,9 +42,9 @@ object RejectedExecutionCounter {
     MetricFactory.builder
       .build(mr)
       .counter(metricName)
-      .ofLong
       .help("Circuit Breaker Rejected Executions.")
       .label[String]("circuit_name")
+      .contramap[Long](_.toDouble)
       .build
       .map(new DefaultRejectedExecutionCounter(_))
 
@@ -72,8 +72,8 @@ object RejectedExecutionCounter {
     MetricFactory.builder
       .build(mr)
       .counter(metricName)
-      .ofLong
       .help("Circuit Breaker Rejected Executions.")
+      .contramap[Long](_.toDouble)
       .build
       .map(counter => circuit.doOnRejected(counter.inc))
 
