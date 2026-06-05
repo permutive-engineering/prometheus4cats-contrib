@@ -34,10 +34,10 @@ import io.prometheus.metrics.model.snapshots.Labels
 import io.prometheus.metrics.model.snapshots.MetricMetadata
 import io.prometheus.metrics.model.snapshots.MetricSnapshot
 import io.prometheus.metrics.model.snapshots.MetricSnapshots
+import io.prometheus.metrics.model.snapshots.SummarySnapshot
 import io.prometheus.metrics.model.snapshots.{Exemplar => PExemplar}
 import io.prometheus.metrics.model.snapshots.{Quantile => PQuantile}
 import io.prometheus.metrics.model.snapshots.{Quantiles => PQuantiles}
-import io.prometheus.metrics.model.snapshots.SummarySnapshot
 import prometheus4cats.Label
 import prometheus4cats.Metric
 import prometheus4cats.MetricCollection
@@ -61,9 +61,7 @@ object MetricCollectionCollector {
   ): Resource[F, Unit] =
     Dispatcher.parallel[F].flatMap { dispatcher =>
       val collector = build(dispatcher, prefix, commonLabels, collection)
-      Resource.make(Async[F].delay(registry.register(collector)))(_ =>
-        Async[F].delay(registry.unregister(collector))
-      )
+      Resource.make(Async[F].delay(registry.register(collector)))(_ => Async[F].delay(registry.unregister(collector)))
     }
 
   private[contrib] def build[F[_]](
@@ -99,7 +97,7 @@ object MetricCollectionCollector {
       values.headOption.map { head =>
         val rawName  = NameUtils.makeName(prefix, name)
         val baseName = if (rawName.endsWith("_total")) rawName.dropRight("_total".length) else rawName
-        val dps = values.map { v =>
+        val dps      = values.map { v =>
           val (vDouble, lbls) = v match {
             case x: MetricCollection.Value.LongCounter   => (x.value.toDouble, x.labelValues)
             case x: MetricCollection.Value.DoubleCounter => (x.value, x.labelValues)
@@ -118,7 +116,7 @@ object MetricCollectionCollector {
     val gaugeSnapshots: List[MetricSnapshot] = mc.gauges.toList.flatMap { case ((name, labelNames), values) =>
       values.headOption.map { head =>
         val fullName = NameUtils.makeName(prefix, name)
-        val dps = values.map { v =>
+        val dps      = values.map { v =>
           val (vDouble, lbls) = v match {
             case x: MetricCollection.Value.LongGauge   => (x.value.toDouble, x.labelValues)
             case x: MetricCollection.Value.DoubleGauge => (x.value, x.labelValues)
@@ -131,13 +129,13 @@ object MetricCollectionCollector {
 
     val histogramSnapshots: List[MetricSnapshot] = mc.histograms.toList.flatMap { case ((name, labelNames), values) =>
       values.headOption.map { head =>
-        val fullName = NameUtils.makeName(prefix, name)
+        val fullName                     = NameUtils.makeName(prefix, name)
         val buckets: NonEmptySeq[Double] = head match {
           case h: MetricCollection.Value.LongHistogram   => h.buckets.map(_.toDouble)
           case h: MetricCollection.Value.DoubleHistogram => h.buckets
         }
         val upperBoundsWithInf = (buckets.toSeq :+ Double.PositiveInfinity).toArray
-        val dps = values.map { v =>
+        val dps                = values.map { v =>
           val (sum, cumulativeCounts, lbls) = v match {
             case x: MetricCollection.Value.LongHistogram =>
               (x.value.sum.toDouble, x.value.bucketValues.toSeq.map(_.toLong), x.labelValues)
@@ -163,7 +161,7 @@ object MetricCollectionCollector {
     val summarySnapshots: List[MetricSnapshot] = mc.summaries.toList.flatMap { case ((name, labelNames), values) =>
       values.headOption.map { head =>
         val fullName = NameUtils.makeName(prefix, name)
-        val dps = values.map { v =>
+        val dps      = values.map { v =>
           val (count, sum, quantiles, lbls) = v match {
             case x: MetricCollection.Value.LongSummary =>
               (
@@ -176,7 +174,7 @@ object MetricCollectionCollector {
               (x.value.count.toLong, x.value.sum, x.value.quantiles, x.labelValues)
           }
           val quantilesJava = quantiles.toList.map { case (q, v) => new PQuantile(q, v) }.toArray
-          val pquantiles =
+          val pquantiles    =
             if (quantilesJava.isEmpty) PQuantiles.EMPTY else PQuantiles.of(quantilesJava: _*)
           new SummarySnapshot.SummaryDataPointSnapshot(
             count,

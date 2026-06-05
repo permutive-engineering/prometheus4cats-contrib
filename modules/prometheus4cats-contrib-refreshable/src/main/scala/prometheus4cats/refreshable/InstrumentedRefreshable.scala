@@ -16,18 +16,19 @@
 
 package prometheus4cats.refreshable
 
+import scala.concurrent.duration.FiniteDuration
+
 import cats.Applicative
 import cats.effect.kernel._
 import cats.effect.kernel.syntax.monadCancel._
 import cats.effect.kernel.syntax.resource._
 import cats.effect.kernel.syntax.spawn._
 import cats.syntax.all._
+
 import com.permutive.refreshable.CachedValue
 import com.permutive.refreshable.Refreshable
 import prometheus4cats._
 import retry.RetryDetails
-
-import scala.concurrent.duration.FiniteDuration
 
 class InstrumentedRefreshable[F[_], A] private (
     underlying: Refreshable[F, A],
