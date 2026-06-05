@@ -18,12 +18,14 @@ package prometheus4cats.bigtable
 
 import scala.annotation.nowarn
 
+import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.effect.kernel.Sync
 
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import prometheus4cats.MetricCollection
-import prometheus4cats.MetricFactory
+import prometheus4cats.contrib.MetricCollectionCollector
 import prometheus4cats.opencensus.OpenCensusUtils
 
 object BigtableOpenCensusMetrics {
@@ -45,12 +47,11 @@ object BigtableOpenCensusMetrics {
       BigtableDataSettings.enableGfeOpenCensusStats()
     }
 
-  def register[F[_]: Sync](
-      metricFactory: MetricFactory.WithCallbacks[F]
+  def register[F[_]: Async](
+      registry: PrometheusRegistry
   ): Resource[F, Unit] =
-    metricFactory.dropPrefix
-      .metricCollectionCallback(metricCollection)
-      .build
+    MetricCollectionCollector
+      .register[F](registry, prefix = None, commonLabels = Map.empty, collection = metricCollection[F])
       .evalMap(_ => enableClientMetrics)
 
 }

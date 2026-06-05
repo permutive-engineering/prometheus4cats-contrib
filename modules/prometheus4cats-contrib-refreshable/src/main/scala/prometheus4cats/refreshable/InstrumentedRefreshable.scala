@@ -16,25 +16,18 @@
 
 package prometheus4cats.refreshable
 
-import scala.concurrent.duration.FiniteDuration
-
 import cats.Applicative
-import cats.Functor
-import cats.data.NonEmptyList
-import cats.effect.kernel.Async
-import cats.effect.kernel.MonadCancel
-import cats.effect.kernel.MonadCancelThrow
-import cats.effect.kernel.Poll
-import cats.effect.kernel.Resource
+import cats.effect.kernel._
 import cats.effect.kernel.syntax.monadCancel._
 import cats.effect.kernel.syntax.resource._
 import cats.effect.kernel.syntax.spawn._
 import cats.syntax.all._
-
 import com.permutive.refreshable.CachedValue
 import com.permutive.refreshable.Refreshable
 import prometheus4cats._
 import retry.RetryDetails
+
+import scala.concurrent.duration.FiniteDuration
 
 class InstrumentedRefreshable[F[_], A] private (
     underlying: Refreshable[F, A],
@@ -150,27 +143,6 @@ object InstrumentedRefreshable {
     ).tupled
   }
 
-  private def callback[F[_]: Functor, A](
-      name: String,
-      refreshable: Refreshable[F, A],
-      metricFactory: MetricFactory.WithCallbacks[F]
-  ): Resource[F, Unit] =
-    metricFactory
-      .withPrefix(prefix)
-      .gauge("status")
-      .help("The current status of this Refreshable")
-      .label[String](refreshableLabelName)
-      .label[CachedValue[A]](
-        "value_state",
-        {
-          case CachedValue.Success(_)   => "success"
-          case CachedValue.Error(_, _)  => "error"
-          case CachedValue.Cancelled(_) => "cancelled"
-        }
-      )
-      .callback(refreshable.get.map(v => NonEmptyList.one((1d, (name, v)))))
-      .build
-
   private def metrics[F[_]: MonadCancelThrow, A](
       name: String,
       metricFactory: MetricFactory[F]
@@ -242,7 +214,7 @@ object InstrumentedRefreshable {
   def create[F[_]: MonadCancelThrow, A](
       builder: Refreshable.RefreshableBuilder[F, A],
       name: String,
-      metricFactory: MetricFactory.WithCallbacks[F]
+      metricFactory: MetricFactory[F]
   ): Resource[F, InstrumentedRefreshable[F, A]] =
     metrics(name, metricFactory)(
       builder.newValueCallback,
@@ -258,7 +230,6 @@ object InstrumentedRefreshable {
           .onExhaustedRetries(onExhaustedRetries)
           .resource
           .evalTap(_ => runningGauge.set(true, name))
-          .flatTap(callback(name, _, metricFactory))
           .map { refreshable =>
             new InstrumentedRefreshable[F, A](
               refreshable, name, readCounter, runningGauge, exhaustedRetriesGauge
@@ -269,7 +240,7 @@ object InstrumentedRefreshable {
   def fromExisting[F[_]: Async, A](
       refreshable: Refreshable[F, A],
       name: String,
-      metricFactory: MetricFactory.WithCallbacks[F]
+      metricFactory: MetricFactory[F]
   ): Resource[F, InstrumentedRefreshable[F, A]] =
     (
       instanceMetrics[F, A](metricFactory).toResource,
@@ -283,7 +254,7 @@ object InstrumentedRefreshable {
               refreshFailureCounter
             )
           ) =>
-        callback(name, refreshable, metricFactory) >> Resource
+        Resource
           .uncancelable((_: Poll[Resource[F, *]]) =>
             Resource.make(runningGauge.set(true, name))(_ =>
               runningGauge.set(false, name)

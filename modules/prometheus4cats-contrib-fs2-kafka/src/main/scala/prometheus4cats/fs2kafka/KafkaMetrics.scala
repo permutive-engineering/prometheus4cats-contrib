@@ -20,15 +20,18 @@ import scala.collection.immutable.Map
 import scala.collection.immutable.Set
 import scala.jdk.CollectionConverters._
 
+import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.effect.kernel.Sync
 import cats.syntax.all._
 
 import fs2.kafka.KafkaConsumer
 import fs2.kafka.KafkaProducer
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import org.apache.kafka.common.MetricName
 import org.apache.kafka.common.{Metric => KafkaMetric}
 import prometheus4cats._
+import prometheus4cats.contrib.MetricCollectionCollector
 
 object KafkaMetrics {
 
@@ -265,52 +268,49 @@ object KafkaMetrics {
     }
   }
 
-  def registerConsumerCallback[F[_]: Sync, K, V](
-      metricFactory: MetricFactory.WithCallbacks[F],
+  def registerConsumerCallback[F[_]: Async, K, V](
+      registry: PrometheusRegistry,
       consumer: KafkaConsumer[F, K, V],
       consumerGroup: String
-  ): Resource[F, Unit] = metricFactory
-    .withPrefix(metricsPrefix)
-    .metricCollectionCallback(
-      transformMetrics(
-        Map(consumerGroupLabel -> consumerGroup),
-        consumer.metrics
-      )
-    )
-    .build
+  ): Resource[F, Unit] = MetricCollectionCollector.register[F](
+    registry,
+    prefix = Some(metricsPrefix),
+    commonLabels = Map.empty,
+    collection = transformMetrics(Map(consumerGroupLabel -> consumerGroup), consumer.metrics)
+  )
 
-  def registerProducerCallback[F[_]: Sync, K, V](
-      metricFactory: MetricFactory.WithCallbacks[F],
+  def registerProducerCallback[F[_]: Async, K, V](
+      registry: PrometheusRegistry,
       producer: KafkaProducer[F, K, V],
       producerName: String
-  ): Resource[F, Unit] = metricFactory
-    .withPrefix(metricsPrefix)
-    .metricCollectionCallback(
-      transformMetrics(
-        Map(
-          producerNameLabel          -> producerName,
-          transactionalProducerLabel -> "false"
-        ),
-        producer.metrics
-      )
+  ): Resource[F, Unit] = MetricCollectionCollector.register[F](
+    registry,
+    prefix = Some(metricsPrefix),
+    commonLabels = Map.empty,
+    collection = transformMetrics(
+      Map(
+        producerNameLabel          -> producerName,
+        transactionalProducerLabel -> "false"
+      ),
+      producer.metrics
     )
-    .build
+  )
 
-  def registerTransactionalProducerCallback[F[_]: Sync, K, V](
-      metricFactory: MetricFactory.WithCallbacks[F],
+  def registerTransactionalProducerCallback[F[_]: Async, K, V](
+      registry: PrometheusRegistry,
       producer: KafkaProducer[F, K, V],
       producerName: String
-  ): Resource[F, Unit] = metricFactory
-    .withPrefix(metricsPrefix)
-    .metricCollectionCallback(
-      transformMetrics(
-        Map(
-          producerNameLabel          -> producerName,
-          transactionalProducerLabel -> "true"
-        ),
-        producer.metrics
-      )
+  ): Resource[F, Unit] = MetricCollectionCollector.register[F](
+    registry,
+    prefix = Some(metricsPrefix),
+    commonLabels = Map.empty,
+    collection = transformMetrics(
+      Map(
+        producerNameLabel          -> producerName,
+        transactionalProducerLabel -> "true"
+      ),
+      producer.metrics
     )
-    .build
+  )
 
 }
