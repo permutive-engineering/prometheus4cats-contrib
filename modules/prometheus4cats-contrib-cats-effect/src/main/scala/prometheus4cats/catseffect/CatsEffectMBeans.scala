@@ -20,13 +20,16 @@ import java.lang.management.ManagementFactory
 
 import scala.jdk.CollectionConverters._
 
+import cats.effect.kernel.Async
 import cats.effect.kernel.Resource
 import cats.effect.kernel.Sync
 import cats.effect.syntax.resource._
 import cats.syntax.all._
 
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import javax.management._
 import prometheus4cats._
+import prometheus4cats.contrib.MetricCollectionCollector
 
 object CatsEffectMBeans {
 
@@ -82,11 +85,11 @@ object CatsEffectMBeans {
     "CpuStarvationCount"
   )
 
-  def register[F[_]: Sync](
-      factory: MetricFactory.WithCallbacks[F]
-  ): Resource[F, Unit] = {
-    val metricFactory = factory.withPrefix("cats_effect")
+  private val mbeansPrefix: Metric.Prefix = "cats_effect"
 
+  def register[F[_]: Async](
+      registry: PrometheusRegistry
+  ): Resource[F, Unit] =
     for {
       mbs    <- Sync[F].delay(ManagementFactory.getPlatformMBeanServer).toResource
       mbeans <- Sync[F]
@@ -118,13 +121,13 @@ object CatsEffectMBeans {
                    .flatten
                    .toResource
 
-      _ <- metricFactory
-             .metricCollectionCallback(
-               callback(mbs, nameMap, computePool, queues, cpuStarvation)
-             )
-             .build
+      _ <- MetricCollectionCollector.register[F](
+             registry,
+             prefix = Some(mbeansPrefix),
+             commonLabels = Map.empty,
+             collection = callback(mbs, nameMap, computePool, queues, cpuStarvation)
+           )
     } yield ()
-  }
 
   private def makeNameMap(
       mbs: MBeanServer,

@@ -19,13 +19,7 @@ package prometheus4cats.refreshable
 import scala.concurrent.duration.FiniteDuration
 
 import cats.Applicative
-import cats.Functor
-import cats.data.NonEmptyList
-import cats.effect.kernel.Async
-import cats.effect.kernel.MonadCancel
-import cats.effect.kernel.MonadCancelThrow
-import cats.effect.kernel.Poll
-import cats.effect.kernel.Resource
+import cats.effect.kernel._
 import cats.effect.kernel.syntax.monadCancel._
 import cats.effect.kernel.syntax.resource._
 import cats.effect.kernel.syntax.spawn._
@@ -90,7 +84,6 @@ object InstrumentedRefreshable {
     (
       factory
         .counter("read_total")
-        .ofLong
         .help("Number of times this Refreshable has been read")
         .label[String](refreshableLabelName)
         .label[CachedValue[A]](
@@ -101,20 +94,19 @@ object InstrumentedRefreshable {
             case CachedValue.Cancelled(_) => "cancelled"
           }
         )
+        .contramap[Long](_.toDouble)
         .unsafeBuild,
       factory
         .gauge("is_running")
-        .ofLong
         .help("Whether this Refreshable is running or has been cancelled")
         .label[String](refreshableLabelName)
-        .contramap[Boolean](if (_) 1L else 0L)
+        .contramap[Boolean](if (_) 1d else 0d)
         .unsafeBuild,
       factory
         .gauge("retries_exhausted")
-        .ofLong
         .help("Whether retries have been exhausted for this Refreshable")
         .label[String](refreshableLabelName)
-        .contramap[Boolean](if (_) 1L else 0L)
+        .contramap[Boolean](if (_) 1d else 0d)
         .unsafeBuild
     ).tupled
   }
@@ -133,47 +125,24 @@ object InstrumentedRefreshable {
     (
       factory
         .counter("refresh_success_total")
-        .ofLong
         .help("Number of times refresh succeeded")
         .label[String](refreshableLabelName)
+        .contramap[Long](_.toDouble)
         .unsafeBuild,
       factory
         .gauge("refresh_failing")
-        .ofLong
         .help("Whether refresh is currently failing")
         .label[String](refreshableLabelName)
-        .contramap[Boolean](if (_) 1L else 0L)
+        .contramap[Boolean](if (_) 1d else 0d)
         .unsafeBuild,
       factory
         .counter("refresh_failure_total")
-        .ofLong
         .help("Number of times refresh failed")
         .label[String](refreshableLabelName)
+        .contramap[Long](_.toDouble)
         .unsafeBuild
     ).tupled
   }
-
-  private def callback[F[_]: Functor, A](
-      name: String,
-      refreshable: Refreshable[F, A],
-      metricFactory: MetricFactory.WithCallbacks[F]
-  ): Resource[F, Unit] =
-    metricFactory
-      .withPrefix(prefix)
-      .gauge("status")
-      .ofLong
-      .help("The current status of this Refreshable")
-      .label[String](refreshableLabelName)
-      .label[CachedValue[A]](
-        "value_state",
-        {
-          case CachedValue.Success(_)   => "success"
-          case CachedValue.Error(_, _)  => "error"
-          case CachedValue.Cancelled(_) => "cancelled"
-        }
-      )
-      .callback(refreshable.get.map(v => NonEmptyList.one((1L, (name, v)))))
-      .build
 
   private def metrics[F[_]: MonadCancelThrow, A](
       name: String,
@@ -246,7 +215,7 @@ object InstrumentedRefreshable {
   def create[F[_]: MonadCancelThrow, A](
       builder: Refreshable.RefreshableBuilder[F, A],
       name: String,
-      metricFactory: MetricFactory.WithCallbacks[F]
+      metricFactory: MetricFactory[F]
   ): Resource[F, InstrumentedRefreshable[F, A]] =
     metrics(name, metricFactory)(
       builder.newValueCallback,
@@ -262,7 +231,6 @@ object InstrumentedRefreshable {
           .onExhaustedRetries(onExhaustedRetries)
           .resource
           .evalTap(_ => runningGauge.set(true, name))
-          .flatTap(callback(name, _, metricFactory))
           .map { refreshable =>
             new InstrumentedRefreshable[F, A](
               refreshable, name, readCounter, runningGauge, exhaustedRetriesGauge
@@ -273,7 +241,7 @@ object InstrumentedRefreshable {
   def fromExisting[F[_]: Async, A](
       refreshable: Refreshable[F, A],
       name: String,
-      metricFactory: MetricFactory.WithCallbacks[F]
+      metricFactory: MetricFactory[F]
   ): Resource[F, InstrumentedRefreshable[F, A]] =
     (
       instanceMetrics[F, A](metricFactory).toResource,
@@ -287,7 +255,7 @@ object InstrumentedRefreshable {
               refreshFailureCounter
             )
           ) =>
-        callback(name, refreshable, metricFactory) >> Resource
+        Resource
           .uncancelable((_: Poll[Resource[F, *]]) =>
             Resource.make(runningGauge.set(true, name))(_ =>
               runningGauge.set(false, name)

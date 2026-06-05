@@ -137,9 +137,9 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
         consumerResource[String, String],
         producerResource[String, String],
         factory
-      ).tupled.use { case (consumer, producer, (metrics, registry)) =>
+      ).tupled.use { case (consumer, producer, (_, registry)) =>
         KafkaMetrics
-          .registerConsumerCallback(metrics, consumer, consumerGroup)
+          .registerConsumerCallback(registry, consumer, consumerGroup)
           .surround(
             producer.produce(
               ProducerRecords
@@ -173,9 +173,9 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
           consumerResource[String, String],
           producerResource[String, String],
           factory
-        ).tupled.use { case (consumer1, consumer2, producer, (metrics, registry)) =>
+        ).tupled.use { case (consumer1, consumer2, producer, (_, registry)) =>
           KafkaMetrics
-            .registerConsumerCallback(metrics, consumer1, consumerGroup1)
+            .registerConsumerCallback(registry, consumer1, consumerGroup1)
             .surround(
               producer.produce(
                 ProducerRecords
@@ -184,7 +184,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                 .subscribeTo(
                   topic1
                 ) >> consumer1.stream.take(1).compile.drain >> KafkaMetrics
-                .registerConsumerCallback(metrics, consumer2, consumerGroup2)
+                .registerConsumerCallback(registry, consumer2, consumerGroup2)
                 .surround(
                   producer
                     .produce(
@@ -214,9 +214,9 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
     val producerName = "test"
 
     withTopic { topic =>
-      (producerResource[String, String], factory).tupled.use { case (producer, (metrics, registry)) =>
+      (producerResource[String, String], factory).tupled.use { case (producer, (_, registry)) =>
         KafkaMetrics
-          .registerProducerCallback(metrics, producer, producerName)
+          .registerProducerCallback(registry, producer, producerName)
           .surround(
             producer
               .produce(
@@ -254,16 +254,16 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
         producerResource[String, String],
         producerResource[String, String],
         factory
-      ).tupled.use { case (producer1, producer2, (metrics, registry)) =>
+      ).tupled.use { case (producer1, producer2, (_, registry)) =>
         KafkaMetrics
-          .registerProducerCallback(metrics, producer1, producerName1)
+          .registerProducerCallback(registry, producer1, producerName1)
           .surround(
             producer1
               .produce(
                 records
               )
               .flatten >> KafkaMetrics
-              .registerProducerCallback(metrics, producer2, producerName2)
+              .registerProducerCallback(registry, producer2, producerName2)
               .surround(
                 producer2
                   .produce(
@@ -295,10 +295,10 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
       (
         transactionalProducerResource[String, String],
         factory
-      ).tupled.use { case (producer, (metrics, registry)) =>
+      ).tupled.use { case (producer, (_, registry)) =>
         KafkaMetrics
           .registerTransactionalProducerCallback(
-            metrics,
+            registry,
             producer,
             producerName
           )
@@ -335,10 +335,10 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
         transactionalProducerResource[String, String],
         transactionalProducerResource[String, String],
         factory
-      ).tupled.use { case (producer1, producer2, (metrics, registry)) =>
+      ).tupled.use { case (producer1, producer2, (_, registry)) =>
         KafkaMetrics
           .registerTransactionalProducerCallback(
-            metrics,
+            registry,
             producer1,
             producerName1
           )
@@ -348,7 +348,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                 records
               ) >> KafkaMetrics
               .registerTransactionalProducerCallback(
-                metrics,
+                registry,
                 producer2,
                 producerName2
               )

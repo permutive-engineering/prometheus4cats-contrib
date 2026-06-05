@@ -22,13 +22,14 @@ lazy val `prometheus4cats-contrib-refreshable` = module
 
 lazy val `prometheus4cats-contrib-google-cloud-bigtable` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-google-cloud-bigtable`)
-  .dependsOn(`prometheus4cats-contrib-opencensus`)
+  .dependsOn(`prometheus4cats-contrib-opencensus`, `prometheus4cats-contrib-cats-effect`)
 
 lazy val `prometheus4cats-contrib-opencensus` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-opencensus`)
 
 lazy val `prometheus4cats-contrib-fs2-kafka` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-fs2-kafka`)
+  .dependsOn(`prometheus4cats-contrib-cats-effect`)
 
 lazy val `prometheus4cats-contrib-circuit` = module
   .settings(libraryDependencies ++= Dependencies.`prometheus4cats-contrib-circuit`)
