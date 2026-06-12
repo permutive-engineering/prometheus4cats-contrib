@@ -37,9 +37,9 @@ object Dependencies {
   )
 
   lazy val `prometheus4cats-contrib-fs2-kafka` = Seq(
-    "org.typelevel" %% "fs2-kafka"                % "4.0.0",
-    "com.permutive" %% "prometheus4cats"          % "6.0.0-RC3",
-    "io.prometheus"  % "prometheus-metrics-model" % "1.6.1"
+    "com.github.fd4s" %% "fs2-kafka"                % "3.9.1",
+    "com.permutive"   %% "prometheus4cats"          % "6.0.0-RC3",
+    "io.prometheus"    % "prometheus-metrics-model" % "1.6.1"
   ) ++ Seq(
     "com.dimafeng"  %% "testcontainers-scala-kafka" % "0.44.1",
     "com.dimafeng"  %% "testcontainers-scala-munit" % "0.44.1",
