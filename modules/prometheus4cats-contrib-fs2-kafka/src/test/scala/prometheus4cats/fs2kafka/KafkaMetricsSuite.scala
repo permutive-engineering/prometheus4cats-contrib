@@ -28,6 +28,7 @@ import cats.syntax.all._
 import com.dimafeng.testcontainers.KafkaContainer
 import com.dimafeng.testcontainers.munit.TestContainerForAll
 import fs2.kafka._
+import io.prometheus.metrics.expositionformats.PrometheusTextFormatWriter
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import munit.CatsEffectSuite
 import org.apache.kafka.clients.admin.NewTopic
@@ -205,6 +206,40 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
                       )
                     }
                 )
+            )
+        }
+      }
+    }
+  }
+
+  test("renders metrics for multiple consumers in the same consumer group") {
+    val consumerGroup = "test"
+
+    withTopic { topic1 =>
+      withTopic { topic2 =>
+        (
+          consumerResource[String, String],
+          consumerResource[String, String],
+          producerResource[String, String],
+          factory
+        ).tupled.use { case (consumer1, consumer2, producer, (_, registry)) =>
+          (KafkaMetrics.registerConsumerCallback(registry, consumer1, consumerGroup) >>
+            KafkaMetrics.registerConsumerCallback(registry, consumer2, consumerGroup))
+            .surround(
+              producer.produce(
+                ProducerRecords.one(ProducerRecord(topic1, "test", "test"))
+              ) >> producer.produce(
+                ProducerRecords.one(ProducerRecord(topic2, "test", "test"))
+              ) >> consumer1.subscribeTo(topic1) >> consumer1.stream.take(1).compile.drain >>
+                consumer2.subscribeTo(topic2) >> consumer2.stream.take(1).compile.drain >>
+                IO.blocking {
+                  val out = new java.io.ByteArrayOutputStream()
+                  PrometheusTextFormatWriter.builder().build().write(out, registry.scrape())
+                  out.toString("UTF-8")
+                }.map { rendered =>
+                  val clientIds = "client_id=\"([^\"]*)\"".r.findAllMatchIn(rendered).map(_.group(1)).toSet
+                  assert(clientIds.size >= 2, s"expected distinct client ids, got $clientIds")
+                }
             )
         }
       }
