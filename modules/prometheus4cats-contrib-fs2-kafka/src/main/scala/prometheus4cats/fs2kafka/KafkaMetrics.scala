@@ -83,7 +83,7 @@ object KafkaMetrics {
 
   private val transactionalProducerLabel: Label.Name = "is_transactional"
 
-  private val tagFilter: Set[String] = Set("client-id")
+  private val clientIdLabel: Label.Name = "client_id"
 
   private def transformMetrics[F[_]: Sync](
       extraLabels: Map[Label.Name, String],
@@ -99,9 +99,8 @@ object KafkaMetrics {
         labels: Map[String, String]
     ): Either[ParseError, Map[Label.Name, String]] =
       Either.catchNonFatal {
-        labels.flatMap { case (key, value) =>
-          if (tagFilter.contains(key)) None
-          else Some(Label.Name.unsafeFrom(key.replace('-', '_')) -> value)
+        labels.map { case (key, value) =>
+          Label.Name.unsafeFrom(key.replace('-', '_')) -> value
         } + (Label.Name("metric_group") -> metricName.group())
       }
         .leftMap(_ => ParseError.InvalidLabels(metricName.name()))
@@ -243,13 +242,19 @@ object KafkaMetrics {
 
         }
 
+        val clientId = metrics.keys.iterator
+          .flatMap(name => Option(name.tags().get("client-id")))
+          .nextOption()
+          .getOrElse("")
+
         val errorGaugeValues = IterableUtils
           .groupMapReduce(errors)(identity)(_ => 1L)(_ + _)
           .view
           .map { case (err, v) =>
             v -> (IndexedSeq(
               err.labelValue,
-              err.metricName
+              err.metricName,
+              clientId
             ) ++ extraLabels.values)
           }
           .toList
@@ -259,7 +264,8 @@ object KafkaMetrics {
           parseErrorHelp,
           IndexedSeq(
             parseErrorTypeLabel,
-            parseErrorMetricNameLabel
+            parseErrorMetricNameLabel,
+            clientIdLabel
           ) ++ extraLabels.keys,
           errorGaugeValues
         )
