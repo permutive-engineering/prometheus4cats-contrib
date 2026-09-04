@@ -23,10 +23,12 @@ import cats.effect.kernel.Sync
 import cats.syntax.all._
 
 import io.opencensus.metrics.Metrics
+// scalafix:off OrganizeImports
 import io.opencensus.metrics.`export`.Distribution
 import io.opencensus.metrics.`export`.Metric
 import io.opencensus.metrics.`export`.MetricDescriptor
 import io.opencensus.metrics.`export`.Summary
+// scalafix:on OrganizeImports
 import prometheus4cats._
 
 // Derived from https://github.com/census-instrumentation/opencensus-java/blob/master/exporters/stats/prometheus/src/main/java/io/opencensus/exporter/stats/prometheus/PrometheusExportUtils.java#L82
