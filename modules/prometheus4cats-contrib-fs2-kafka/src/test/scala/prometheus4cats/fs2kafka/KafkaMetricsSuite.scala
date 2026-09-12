@@ -87,7 +87,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
   final def producerResource[K, V](implicit
       k: KeySerializer[IO, K],
       v: ValueSerializer[IO, V]
-  ): Resource[IO, KafkaProducer.Metrics[IO, K, V]] =
+  ): Resource[IO, KafkaProducer[IO, K, V]] =
     KafkaProducer.resource(
       ProducerSettings[IO, K, V].withProperties(defaultProducerConfig)
     )
@@ -95,14 +95,12 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
   final def transactionalProducerResource[K, V](implicit
       k: KeySerializer[IO, K],
       v: ValueSerializer[IO, V]
-  ): Resource[IO, TransactionalKafkaProducer.WithoutOffsets[IO, K, V]] =
-    TransactionalKafkaProducer.resource(
-      TransactionalProducerSettings[IO, K, V](
-        UUID.randomUUID().show,
-        ProducerSettings[IO, K, V]
-          .withProperties(defaultProducerConfig)
-          .withRetries(1)
-      )
+  ): Resource[IO, KafkaProducer[IO, K, V]] =
+    KafkaProducer.transactional(
+      ProducerSettings[IO, K, V]
+        .withProperties(defaultProducerConfig)
+        .withRetries(1)
+        .withTransactionalId(UUID.randomUUID().show)
     )
 
   final def defaultProducerConfig = withContainers { container =>
@@ -341,7 +339,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
           )
           .surround(
             producer
-              .produceWithoutOffsets(
+              .produceTransactionally(
                 ProducerRecords(List(ProducerRecord(topic, "test", "test")))
               ) >> IO
               .delay(registry.scrape().asScala.toList)
@@ -381,7 +379,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
           )
           .surround(
             producer1
-              .produceWithoutOffsets(
+              .produceTransactionally(
                 records
               ) >> KafkaMetrics
               .registerTransactionalProducerCallback(
@@ -391,7 +389,7 @@ class KafkaMetricsSuite extends CatsEffectSuite with TestContainerForAll {
               )
               .surround(
                 producer2
-                  .produceWithoutOffsets(
+                  .produceTransactionally(
                     records
                   ) >> IO
                   .delay(registry.scrape().asScala.toList)

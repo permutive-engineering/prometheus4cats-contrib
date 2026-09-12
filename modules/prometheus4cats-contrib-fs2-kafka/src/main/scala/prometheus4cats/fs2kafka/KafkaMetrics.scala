@@ -27,7 +27,6 @@ import cats.syntax.all._
 
 import fs2.kafka.KafkaConsumer
 import fs2.kafka.KafkaProducer
-import fs2.kafka.TransactionalKafkaProducer
 import io.prometheus.metrics.model.registry.PrometheusRegistry
 import org.apache.kafka.common.MetricName
 import org.apache.kafka.common.{Metric => KafkaMetric}
@@ -288,7 +287,7 @@ object KafkaMetrics {
 
   def registerProducerCallback[F[_]: Async, K, V](
       registry: PrometheusRegistry,
-      producer: KafkaProducer.Metrics[F, K, V],
+      producer: KafkaProducer[F, K, V],
       producerName: String
   ): Resource[F, Unit] = MetricCollectionCollector.register[F](
     registry,
@@ -305,7 +304,7 @@ object KafkaMetrics {
 
   def registerTransactionalProducerCallback[F[_]: Async, K, V](
       registry: PrometheusRegistry,
-      producer: TransactionalKafkaProducer.Metrics[F, K, V],
+      producer: KafkaProducer[F, K, V],
       producerName: String
   ): Resource[F, Unit] = MetricCollectionCollector.register[F](
     registry,
