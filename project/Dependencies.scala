@@ -44,7 +44,7 @@ object Dependencies {
     "com.dimafeng"  %% "testcontainers-scala-kafka"                % "0.44.1",
     "com.dimafeng"  %% "testcontainers-scala-munit"                % "0.44.1",
     "com.permutive" %% "prometheus4cats-java"                      % "6.0.0-RC4",
-    "io.prometheus"  % "prometheus-metrics-exposition-textformats" % "1.6.1",
+    "io.prometheus"  % "prometheus-metrics-exposition-textformats" % "1.8.0",
     "org.typelevel" %% "cats-effect-testkit"                       % "3.7.0",
     "org.typelevel" %% "munit-cats-effect"                         % "2.2.0"
   ).map(_ % Test)
