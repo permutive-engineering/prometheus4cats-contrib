@@ -6,8 +6,8 @@ object Dependencies {
 
   lazy val `prometheus4cats-contrib-cats-effect` = Seq(
     "com.permutive" %% "prometheus4cats"          % "6.0.0-RC4",
-    "io.prometheus"  % "prometheus-metrics-model" % "1.8.0",
-    "org.typelevel" %% "cats-effect"              % "3.7.0"
+    "io.prometheus"  % "prometheus-metrics-model" % "1.9.0",
+    "org.typelevel" %% "cats-effect"              % "3.7.1"
   )
 
   lazy val `prometheus4cats-contrib-trace4cats` = Seq(
@@ -21,14 +21,14 @@ object Dependencies {
   )
 
   lazy val `prometheus4cats-contrib-google-cloud-bigtable` = Seq(
-    "com.google.cloud" % "google-cloud-bigtable"    % "2.80.0",
+    "com.google.cloud" % "google-cloud-bigtable"    % "2.85.0",
     "com.permutive"   %% "prometheus4cats"          % "6.0.0-RC4",
-    "io.prometheus"    % "prometheus-metrics-model" % "1.8.0"
+    "io.prometheus"    % "prometheus-metrics-model" % "1.9.0"
   ) ++ Seq(
-    "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.215.1",
-    "org.scalameta"   %% "munit"                          % "1.3.4",
-    "org.typelevel"   %% "cats-effect-testkit"            % "3.7.0",
-    "org.typelevel"   %% "munit-cats-effect"              % "2.2.0"
+    "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.222.0",
+    "org.scalameta"   %% "munit"                          % "1.3.6",
+    "org.typelevel"   %% "cats-effect-testkit"            % "3.7.1",
+    "org.typelevel"   %% "munit-cats-effect"              % "2.2.1"
   ).map(_ % Test)
 
   lazy val `prometheus4cats-contrib-opencensus` = Seq(
@@ -37,21 +37,21 @@ object Dependencies {
   )
 
   lazy val `prometheus4cats-contrib-fs2-kafka` = Seq(
-    "org.typelevel" %% "fs2-kafka"                % "4.0.0",
+    "org.typelevel" %% "fs2-kafka"                % "4.1.3",
     "com.permutive" %% "prometheus4cats"          % "6.0.0-RC4",
-    "io.prometheus"  % "prometheus-metrics-model" % "1.8.0"
+    "io.prometheus"  % "prometheus-metrics-model" % "1.9.0"
   ) ++ Seq(
     "com.dimafeng"  %% "testcontainers-scala-kafka"                % "0.44.1",
     "com.dimafeng"  %% "testcontainers-scala-munit"                % "0.44.1",
     "com.permutive" %% "prometheus4cats-java"                      % "6.0.0-RC4",
-    "io.prometheus"  % "prometheus-metrics-exposition-textformats" % "1.6.1",
-    "org.typelevel" %% "cats-effect-testkit"                       % "3.7.0",
-    "org.typelevel" %% "munit-cats-effect"                         % "2.2.0"
+    "io.prometheus"  % "prometheus-metrics-exposition-textformats" % "1.9.0",
+    "org.typelevel" %% "cats-effect-testkit"                       % "3.7.1",
+    "org.typelevel" %% "munit-cats-effect"                         % "2.2.1"
   ).map(_ % Test)
 
   lazy val `prometheus4cats-contrib-circuit` = Seq(
     "com.permutive"     %% "prometheus4cats" % "6.0.0-RC4",
-    "io.chrisdavenport" %% "circuit"         % "0.5.1"
+    "io.chrisdavenport" %% "circuit"         % "0.7.0"
   )
 
 }
