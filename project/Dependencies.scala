@@ -28,7 +28,7 @@ object Dependencies {
     "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.222.0",
     "org.scalameta"   %% "munit"                          % "1.3.6",
     "org.typelevel"   %% "cats-effect-testkit"            % "3.7.1",
-    "org.typelevel"   %% "munit-cats-effect"              % "2.2.0"
+    "org.typelevel"   %% "munit-cats-effect"              % "2.2.1"
   ).map(_ % Test)
 
   lazy val `prometheus4cats-contrib-opencensus` = Seq(
@@ -46,7 +46,7 @@ object Dependencies {
     "com.permutive" %% "prometheus4cats-java"                      % "6.0.0-RC4",
     "io.prometheus"  % "prometheus-metrics-exposition-textformats" % "1.9.0",
     "org.typelevel" %% "cats-effect-testkit"                       % "3.7.1",
-    "org.typelevel" %% "munit-cats-effect"                         % "2.2.0"
+    "org.typelevel" %% "munit-cats-effect"                         % "2.2.1"
   ).map(_ % Test)
 
   lazy val `prometheus4cats-contrib-circuit` = Seq(
