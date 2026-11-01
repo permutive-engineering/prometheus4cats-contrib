@@ -5,24 +5,24 @@ object Dependencies {
   lazy val `kind-projector` = compilerPlugin(("org.typelevel" % "kind-projector" % "0.13.4").cross(CrossVersion.full))
 
   lazy val `prometheus4cats-contrib-cats-effect` = Seq(
-    "com.permutive" %% "prometheus4cats"          % "6.0.0-RC4",
+    "com.permutive" %% "prometheus4cats"          % "6.0.0-RC5",
     "io.prometheus"  % "prometheus-metrics-model" % "1.8.0",
     "org.typelevel" %% "cats-effect"              % "3.7.0"
   )
 
   lazy val `prometheus4cats-contrib-trace4cats` = Seq(
-    "com.permutive"    %% "prometheus4cats" % "6.0.0-RC4",
+    "com.permutive"    %% "prometheus4cats" % "6.0.0-RC5",
     "io.janstenpickle" %% "trace4cats-core" % "0.14.7"
   )
 
   lazy val `prometheus4cats-contrib-refreshable` = Seq(
-    "com.permutive" %% "prometheus4cats" % "6.0.0-RC4",
+    "com.permutive" %% "prometheus4cats" % "6.0.0-RC5",
     "com.permutive" %% "refreshable"     % "2.1.1"
   )
 
   lazy val `prometheus4cats-contrib-google-cloud-bigtable` = Seq(
     "com.google.cloud" % "google-cloud-bigtable"    % "2.86.0",
-    "com.permutive"   %% "prometheus4cats"          % "6.0.0-RC4",
+    "com.permutive"   %% "prometheus4cats"          % "6.0.0-RC5",
     "io.prometheus"    % "prometheus-metrics-model" % "1.8.0"
   ) ++ Seq(
     "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.223.0",
@@ -32,13 +32,13 @@ object Dependencies {
   ).map(_ % Test)
 
   lazy val `prometheus4cats-contrib-opencensus` = Seq(
-    "com.permutive" %% "prometheus4cats" % "6.0.0-RC4",
+    "com.permutive" %% "prometheus4cats" % "6.0.0-RC5",
     "io.opencensus"  % "opencensus-impl" % "0.31.1"
   )
 
   lazy val `prometheus4cats-contrib-fs2-kafka` = Seq(
     "org.typelevel" %% "fs2-kafka"                % "4.0.0",
-    "com.permutive" %% "prometheus4cats"          % "6.0.0-RC4",
+    "com.permutive" %% "prometheus4cats"          % "6.0.0-RC5",
     "io.prometheus"  % "prometheus-metrics-model" % "1.8.0"
   ) ++ Seq(
     "com.dimafeng"  %% "testcontainers-scala-kafka"                % "0.44.1",
@@ -50,7 +50,7 @@ object Dependencies {
   ).map(_ % Test)
 
   lazy val `prometheus4cats-contrib-circuit` = Seq(
-    "com.permutive"     %% "prometheus4cats" % "6.0.0-RC4",
+    "com.permutive"     %% "prometheus4cats" % "6.0.0-RC5",
     "io.chrisdavenport" %% "circuit"         % "0.5.1"
   )
 
