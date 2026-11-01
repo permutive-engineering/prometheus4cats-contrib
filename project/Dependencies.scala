@@ -51,7 +51,7 @@ object Dependencies {
 
   lazy val `prometheus4cats-contrib-circuit` = Seq(
     "com.permutive"     %% "prometheus4cats" % "6.0.0-RC5",
-    "io.chrisdavenport" %% "circuit"         % "0.5.1"
+    "io.chrisdavenport" %% "circuit"         % "0.7.0"
   )
 
 }
