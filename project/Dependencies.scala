@@ -6,7 +6,7 @@ object Dependencies {
 
   lazy val `prometheus4cats-contrib-cats-effect` = Seq(
     "com.permutive" %% "prometheus4cats"          % "6.0.0-RC5",
-    "io.prometheus"  % "prometheus-metrics-model" % "1.8.0",
+    "io.prometheus"  % "prometheus-metrics-model" % "1.10.0",
     "org.typelevel" %% "cats-effect"              % "3.7.0"
   )
 
@@ -23,7 +23,7 @@ object Dependencies {
   lazy val `prometheus4cats-contrib-google-cloud-bigtable` = Seq(
     "com.google.cloud" % "google-cloud-bigtable"    % "2.86.0",
     "com.permutive"   %% "prometheus4cats"          % "6.0.0-RC5",
-    "io.prometheus"    % "prometheus-metrics-model" % "1.8.0"
+    "io.prometheus"    % "prometheus-metrics-model" % "1.10.0"
   ) ++ Seq(
     "com.google.cloud" % "google-cloud-bigtable-emulator" % "0.223.0",
     "org.scalameta"   %% "munit"                          % "1.3.4",
@@ -39,7 +39,7 @@ object Dependencies {
   lazy val `prometheus4cats-contrib-fs2-kafka` = Seq(
     "org.typelevel" %% "fs2-kafka"                % "4.0.0",
     "com.permutive" %% "prometheus4cats"          % "6.0.0-RC5",
-    "io.prometheus"  % "prometheus-metrics-model" % "1.8.0"
+    "io.prometheus"  % "prometheus-metrics-model" % "1.10.0"
   ) ++ Seq(
     "com.dimafeng"  %% "testcontainers-scala-kafka"                % "0.44.1",
     "com.dimafeng"  %% "testcontainers-scala-munit"                % "0.44.1",
